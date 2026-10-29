@@ -1,26 +1,408 @@
 @import "tailwindcss";
 
+/* ───────────────────────────────────────────────────────────
+   Design tokens · "NO LAG" world
+   Playful-tech, neon on ink. Hue-tinted neutrals, never flat gray.
+   ─────────────────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Ground: deep blue-black, like a dark room lit by a neon sign */
+  --ink: #07060d;
+  --ink-2: #0d0b18;
+  --ink-3: #151127;
+  --line: color-mix(in oklab, #efeafc 10%, transparent);
+  --line-strong: color-mix(in oklab, #efeafc 18%, transparent);
+
+  /* Type: cool white, and muted tones tinted from the violet hue (never gray) */
+  --fg: #efeafc;
+  --fg-muted: #aaa3cc;
+  --fg-dim: #6f688f;
+
+  /* Palette: neon violet world (reference: purple glow ring on black) */
+  --violet: #7c3aed;     /* primary accent: buttons, lit edges */
+  --orchid: #c084fc;     /* highlight / hover / serif accent words */
+  --magenta: #e040fb;    /* the neon ring, marquee */
+  --electric: #5b8cff;   /* cool counterweight: blue glints */
+  --indigo-deep: #241a4d;/* shadow mass, chapter tints */
+  --neon: #a855f7;       /* glow colour for shadows and halos */
+
+  /* Role aliases kept so component CSS written against the previous
+     palette keeps working: accent / highlight / warm / cool / deep */
+  --amber: var(--violet);
+  --amber-2: var(--neon);
+  --sand: var(--orchid);
+  --coral: var(--magenta);
+  --teal: var(--electric);
+  --teal-deep: var(--indigo-deep);
+  --lime: var(--violet);
+  --cyan: var(--electric);
+
+  --accent: var(--violet);
+  --accent-ink: #f7f3ff; /* text on violet */
+
+  --radius-s: 6px;
+  --radius-m: 14px;
+  --radius-l: 24px;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-snap: cubic-bezier(0.2, 0.9, 0.1, 1);
+  --dur-fast: 180ms;
+  --dur: 420ms;
+  --dur-slow: 900ms;
+
+  --gutter: clamp(16px, 4vw, 56px);
+  --measure: 68ch;
+
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-dim: var(--fg-dim);
+  --color-violet: var(--violet);
+  --color-orchid: var(--orchid);
+  --color-magenta: var(--magenta);
+  --color-electric: var(--electric);
+  --color-indigo-deep: var(--indigo-deep);
+  --color-neon: var(--neon);
+  --color-amber: var(--amber);
+  --color-amber-2: var(--amber-2);
+  --color-sand: var(--sand);
+  --color-coral: var(--coral);
+  --color-teal: var(--teal);
+  --color-teal-deep: var(--teal-deep);
+  --color-lime: var(--lime);
+  --color-cyan: var(--cyan);
+  --color-accent: var(--accent);
+  --color-line: var(--line);
+
+  --font-display: var(--font-display), "Bricolage Grotesque", system-ui, sans-serif;
+  --font-serif: var(--font-serif), "Instrument Serif", Georgia, serif;
+  --font-sans: var(--font-display), system-ui, sans-serif;
+
+  --ease-out: var(--ease-out);
+  --ease-snap: var(--ease-snap);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ─── Base ─────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--ink);
+  color: var(--fg);
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-optical-sizing: auto;
+  font-feature-settings: "ss01", "tnum" 0;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+  min-height: 100dvh;
 }
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+  text-wrap: balance;
+  letter-spacing: -0.02em;
+}
+
+p {
+  text-wrap: pretty;
+  max-width: var(--measure);
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  text-decoration-color: color-mix(in oklab, currentColor 45%, transparent);
+  transition: text-decoration-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+a:hover { text-decoration-color: currentColor; }
+
+/* ─── Browser surfaces carry the design ─────────────────────── */
+::selection {
+  background: var(--violet);
+  color: var(--accent-ink);
+}
+::-moz-selection {
+  background: var(--violet);
+  color: var(--accent-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--orchid);
+  outline-offset: 3px;
+  border-radius: var(--radius-s);
+}
+
+input, textarea { caret-color: var(--orchid); }
+
+.font-serif { font-family: var(--font-serif); }
+
+* { scrollbar-width: thin; scrollbar-color: var(--ink-3) var(--ink); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--ink); }
+::-webkit-scrollbar-thumb {
+  background: var(--ink-3);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--violet); }
+
+/* ─── Utilities ─────────────────────────────────────────────── */
+.container-x {
+  padding-inline: var(--gutter);
+  margin-inline: auto;
+  width: 100%;
+  max-width: 1440px;
+}
+
+.sr-only-focusable:not(:focus):not(:focus-within) {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0);
+  white-space: nowrap; border: 0;
+}
+
+/* Scanline / grid texture used sparingly as a field of color, not decoration everywhere */
+.grid-field {
+  background-image:
+    linear-gradient(to right, var(--line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at center, #000 40%, transparent 75%);
+}
+
+/* ─── Motion safety ─────────────────────────────────────────────
+   Motion is controlled by the in-site switch (html[data-motion]),
+   not by the OS media query. "reduce" = finished states, no travel. */
+html[data-motion="reduce"] { scroll-behavior: auto; }
+html[data-motion="reduce"] *,
+html[data-motion="reduce"] *::before,
+html[data-motion="reduce"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+
+/* ===========================================================
+   Sections + controls (Agent B, v2 "dark neon violet")
+   Inside @layer components so Tailwind utilities win on conflict.
+   Hidden states live only under html.js[data-motion="full"], so the
+   first paint, no-JS and the in-site "reduce motion" switch all show
+   the finished page. Colour only through tokens; glows are --neon.
+   =========================================================== */
+@layer components {
+
+/* Lenis: ReactLenis root puts these classes on <html> */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: clip; }
+
+/* Chapter grounds: colour changes exactly at section edges */
+.ground-ink { background-color: var(--ink); }
+.ground-ink-2 { background-color: var(--ink-2); }
+.ground-ink-3 { background-color: var(--ink-3); }
+
+/* Display voice helpers */
+.font-condensed { font-stretch: 85%; }
+.mask-line { display: block; overflow: clip; padding-block: 0.18em 0.2em; margin-block: -0.18em -0.2em; } /* room for Vietnamese accents and descenders */
+.mask-line > * { display: block; }
+
+/* ─── Hero load sequence (CSS only; settled by 1.2s) ─────────── */
+.hero-line { display: block; overflow: clip; padding-block: 0.18em 0.22em; margin-block: -0.18em -0.22em; }
+.hero-line > span { display: block; }
+html[data-motion="full"] .hero-line > span {
+  transform: translateY(140%);
+  animation: line-up 900ms var(--ease-out) forwards;
+  animation-delay: calc(var(--i, 0) * 110ms + 120ms);
+}
+html[data-motion="full"] .hero-load {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: load-rise 700ms var(--ease-out) forwards;
+  animation-delay: var(--d, 420ms);
+}
+@keyframes line-up { to { transform: none; } }
+@keyframes load-rise { to { opacity: 1; transform: none; } }
+
+/* ─── Reveal once in view (IntersectionObserver sets data-in) ─ */
+html.js[data-motion="full"] [data-reveal]:not([data-in]) { opacity: 0; }
+html.js[data-motion="full"] [data-reveal="rise"]:not([data-in]) { transform: translateY(24px); }
+/* line / mask move their child, so the observed box itself is never clipped out of view */
+html.js[data-motion="full"] [data-reveal="line"]:not([data-in]) { opacity: 1; }
+html.js[data-motion="full"] [data-reveal="line"]:not([data-in]) > * { transform: translateY(140%); }
+html.js[data-motion="full"] [data-reveal="mask"]:not([data-in]) { opacity: 1; }
+html.js[data-motion="full"] [data-reveal="mask"]:not([data-in]) > * { clip-path: inset(0 0 100% 0); }
+html.js[data-motion="full"] [data-reveal="settle"]:not([data-in]) { opacity: 1; transform: scale(1.08); }
+/* One reveal timing for the whole page: 700ms --ease-out, staggered through --d (80ms steps) */
+[data-reveal][data-in] {
+  transition:
+    opacity 700ms var(--ease-out) var(--d, 0ms),
+    transform 700ms var(--ease-out) var(--d, 0ms);
+}
+[data-reveal="line"][data-in] > * { transition: transform 700ms var(--ease-out) var(--d, 0ms); }
+[data-reveal="mask"][data-in] > * { transition: clip-path 700ms var(--ease-out) var(--d, 0ms); }
+[data-reveal="settle"][data-in] { transition: transform 700ms var(--ease-out) var(--d, 0ms); }
+
+/* ─── Custom cursor (fine pointers only; orchid ring, neon dot) ─ */
+html[data-custom-cursor], html[data-custom-cursor] * { cursor: none !important; }
+.cursor-ring, .cursor-dot {
+  position: fixed; top: 0; left: 0; z-index: 9999;
+  pointer-events: none; border-radius: 999px;
+  translate: -50% -50%;
+}
+.cursor-ring {
+  width: 36px; height: 36px;
+  border: 1.5px solid var(--orchid);
+  color: var(--magenta);
+  display: grid; place-items: center;
+  transition:
+    width var(--dur-fast) var(--ease-out), height var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out);
+}
+.cursor-ring svg { opacity: 0; transition: opacity var(--dur-fast) var(--ease-out); }
+.cursor-dot {
+  width: 6px; height: 6px; background: var(--neon);
+  transition: opacity var(--dur-fast) var(--ease-out), scale var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+.cursor-ring[data-state="hidden"], .cursor-dot[data-state="hidden"] { opacity: 0; }
+.cursor-ring[data-state="link"] { width: 48px; height: 48px; border-color: var(--fg); background-color: color-mix(in oklab, var(--fg) 8%, transparent); }
+.cursor-dot[data-state="link"] { scale: 0; }
+.cursor-ring[data-state="grab"] { width: 60px; height: 60px; border-color: var(--magenta); }
+.cursor-ring[data-state="grab"] svg { opacity: 1; }
+.cursor-dot[data-state="grab"] { scale: 0; }
+.cursor-ring[data-state="down"] { width: 22px; height: 22px; border-color: var(--magenta); }
+.cursor-dot[data-state="down"] { background-color: var(--fg); }
+
+/* ─── Controls ───────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  height: 3rem; padding-inline: 1.375rem; border-radius: 999px;
+  font-weight: 600; font-size: 0.9375rem; line-height: 1; white-space: nowrap;
+  text-decoration: none; border: 1px solid transparent;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 200ms ease, color 200ms ease, border-color 200ms ease,
+    transform 140ms var(--ease-out);
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background-color: var(--violet); color: var(--accent-ink); }
+.btn-primary:hover {
+  background-color: color-mix(in oklab, var(--violet) 86%, var(--orchid));
+  box-shadow: 0 12px 32px -10px color-mix(in oklab, var(--neon) 60%, transparent);
+}
+.btn-ghost { border-color: var(--line-strong); color: var(--fg); background-color: transparent; }
+.btn-ghost:hover { border-color: var(--orchid); color: var(--orchid); }
+.btn-ghost[data-copied] { border-color: var(--orchid); color: var(--orchid); }
+
+.icon-btn {
+  display: inline-grid; place-items: center; width: 2.75rem; height: 2.75rem;
+  border-radius: 999px; border: 1px solid transparent; color: var(--fg);
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease, transform 140ms var(--ease-out);
+}
+.icon-btn:hover { background-color: var(--ink-3); border-color: var(--line-strong); color: var(--orchid); }
+.icon-btn:active { transform: scale(0.94); }
+
+.link-arrow {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-weight: 500; text-decoration: none; color: var(--fg);
+  transition: color 200ms ease;
+}
+.link-arrow svg { transition: transform 200ms var(--ease-out); }
+.link-arrow:hover { color: var(--orchid); }
+.link-arrow:hover svg:last-child { transform: translate(2px, -2px); }
+.link-arrow:active { color: var(--magenta); }
+
+.nav-link {
+  font-size: 0.9375rem; font-weight: 500; color: var(--fg); text-decoration: none;
+  opacity: 0.78;
+  transition: opacity 200ms ease, color 200ms ease;
+}
+.nav-link:hover { opacity: 1; }
+.nav-link:active { color: var(--orchid); opacity: 1; }
+
+/* Motion switch: pill, pressed = reduced */
+.motion-toggle {
+  display: inline-flex; align-items: center; gap: 0.45rem; height: 2.25rem; padding-inline: 0.75rem 0.9rem;
+  border-radius: 999px; border: 1px solid var(--line-strong); color: var(--fg); background: transparent;
+  font-size: 0.8125rem; font-weight: 600; line-height: 1; white-space: nowrap;
+  transition: border-color 200ms ease, color 200ms ease, background-color 200ms ease, transform 140ms var(--ease-out);
+}
+.motion-toggle:hover { border-color: var(--orchid); color: var(--orchid); }
+.motion-toggle:active { transform: scale(0.96); }
+.motion-toggle[aria-pressed="true"] { background-color: var(--ink-3); border-color: var(--line-strong); }
+.motion-toggle svg { color: var(--orchid); }
+.motion-toggle[aria-pressed="true"] svg { color: var(--fg-muted); }
+
+/* Language segmented control */
+.lang-toggle-thumb {
+  position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px);
+  border-radius: 999px; background-color: var(--fg);
+  transition: transform 200ms var(--ease-out);
+}
+.lang-toggle[data-lang="vi"] .lang-toggle-thumb { transform: translateX(100%); }
+.lang-toggle-seg { color: var(--fg); opacity: 0.78; transition: color 200ms ease, opacity 200ms ease, transform 140ms var(--ease-out); }
+.lang-toggle-seg:hover { opacity: 1; }
+.lang-toggle-seg:active { transform: scale(0.95); }
+.lang-toggle-seg[aria-pressed="true"] { color: var(--ink); opacity: 1; }
+
+/* 3D tilt surface */
+.tilt-surface { border-radius: var(--radius-l); transition: box-shadow 200ms var(--ease-out); }
+.tilt:hover .tilt-surface { box-shadow: 0 28px 70px -28px color-mix(in oklab, var(--neon) 55%, transparent); }
+
+/* Skills: words light in orchid under the hand */
+.tool-word { color: var(--fg); transition: color 200ms ease, translate 200ms var(--ease-out); }
+.tool-word:hover { color: var(--orchid); translate: 0 -2px; }
+
+/* Hero scroll cue: a thin neon drop, loops only with motion allowed */
+.scroll-cue { position: relative; display: inline-block; width: 1px; height: 44px; overflow: clip; background-color: var(--line-strong); }
+.scroll-cue > span { position: absolute; inset: 0; background-color: var(--neon); transform: translateY(100%); }
+html[data-motion="full"] .scroll-cue > span { animation: cue-drop 2s var(--ease-out) infinite; }
+@keyframes cue-drop {
+  0% { transform: translateY(-100%); }
+  55%, 100% { transform: translateY(100%); }
+}
+
+/* ─── Edge marquee: one per page, linear, pausable ───────────── */
+.marquee { overflow: clip; white-space: nowrap; }
+.marquee-track { display: inline-flex; width: max-content; }
+.marquee-copy { display: inline-block; flex: 0 0 auto; padding-inline-end: 0.25em; }
+html[data-motion="full"] .marquee-track { animation: marquee 40s linear infinite; will-change: transform; }
+html[data-motion="full"] .marquee:hover .marquee-track,
+html[data-motion="full"] .marquee[data-paused] .marquee-track { animation-play-state: paused; }
+@keyframes marquee { to { transform: translate3d(-50%, 0, 0); } }
+
+/* ─── Sideways gallery: native drag row first, pinned on wide ── */
+.gallery-track {
+  display: flex; gap: var(--gutter); list-style: none; margin: 0;
+  padding-inline: var(--gutter); overflow-x: auto; overflow-y: clip;
+  scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter);
+  overscroll-behavior-x: contain; scrollbar-width: none;
+}
+.gallery-track::-webkit-scrollbar { display: none; }
+.gallery-card { flex: 0 0 min(84vw, 30rem); scroll-snap-align: start; }
+.gallery[data-pinned] .gallery-stage {
+  position: sticky; top: 0; height: 100svh;
+  display: flex; flex-direction: column; justify-content: center; overflow: clip;
+}
+.gallery[data-pinned] .gallery-track { overflow: visible; scroll-snap-type: none; padding-inline: var(--gutter); }
+.gallery[data-pinned] .gallery-card { flex-basis: min(70vw, 1100px); }
+.gallery[data-pinned] .gallery-card > * { height: min(70svh, 720px); }
+
+/* ─── Curtain footer: fixed sheet revealed through a clipped box ─ */
+.curtain { position: relative; clip-path: inset(0); }
+.curtain-inner { position: fixed; bottom: 0; left: 0; right: 0; }
+
+} /* end @layer components */
