@@ -31,11 +31,14 @@ npm run lint
 
 ## Edit content
 
-All copy, projects, skills and links live in **`lib/content.ts`**. Every string is `{ en, vi }`.
-Photos live in `public/images/` (the badge uses `duc-mirror.jpg`, the scenes use `duc-sunset.jpg`).
+All copy, projects, résumé and links live in **`lib/content.ts`**. Every string is `{ en, vi }`.
+Photos live in `public/images/` (the badge uses `duc-mirror.jpg`, the particle scene uses `duc-sunset.jpg`),
+project covers in `public/images/projects/` (1200×750 screenshots), the CV in `public/cv/`.
 
 To add a project, append to `projects[]` with `title`, bilingual `tagline` / `description` / `highlights`,
-`stack`, `category`, `repo`, optional `demo`, `year`, `featured`, `accent`.
+`stack`, `category`, optional `repo` / `demo` + `demoKind`, `cover`, `role`, `year`, `featured`, `accent`, `visibility`.
+The résumé section reads `resume` (education, experience, skillGroups, certificates, awards); update it when the CV changes
+and replace `public/cv/Nguyen-Manh-Duc-CV.pdf`.
 
 ## Deploy on Vercel
 

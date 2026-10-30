@@ -31,13 +31,15 @@ export const profile = {
       "Đây là nơi mình chia sẻ hành trình, những dự án và những ý tưởng mà mình đã và đang phát triển.",
     ],
   } as L<string[]>,
-  location: { en: "Vietnam", vi: "Việt Nam" } as L,
+  location: { en: "Hanoi, Vietnam", vi: "Hà Nội, Việt Nam" } as L,
   email: "duchaiphong97@gmail.com",
   links: {
     github: "https://github.com/ducnolag",
     linkedin:
       "https://www.linkedin.com/in/m%E1%BA%A1nh-%C4%91%E1%BB%A9c-nguy%E1%BB%85n-6aa8b832a/",
   },
+  /** Downloadable résumé (public/cv). */
+  cv: { href: "/cv/Nguyen-Manh-Duc-CV.pdf", filename: "Nguyen-Manh-Duc-CV.pdf" },
   photos: {
     campus: {
       src: "/images/duc-campus.jpg", w: 200, h: 200,
@@ -75,7 +77,11 @@ export const gallery = [
   profile.photos.campus,
 ] as const;
 
-
+/* ────────────────────────────────────────────────────────────
+   Projects. Only what Đức asked to show. Private repos have no `repo`,
+   only a `demo`. `cover` is a real screenshot in public/images/projects
+   when a live site exists; otherwise the card draws a generated cover.
+   ──────────────────────────────────────────────────────────── */
 export type Project = {
   slug: string;
   title: string;
@@ -83,154 +89,202 @@ export type Project = {
   description: L;
   highlights: L<string[]>;
   stack: string[];
-  category: "ai" | "web" | "data" | "system";
-  repo: string;
+  category: "ai" | "web" | "data" | "system" | "mobile";
+  /** Public repository, if any. */
+  repo?: string;
+  /** Live site / build link, if any. */
   demo?: string;
+  /** Short label for the demo link, e.g. "Live demo", "UI preview", "Expo build". */
+  demoKind?: "live" | "ui-only" | "build";
+  /** Role / team context line (from the CV). */
+  role?: L;
+  /** Screenshot cover (1200×750) or undefined → generated cover. */
+  cover?: string;
   year: number;
   featured: boolean;
-  /** Accent used by the card's 3D object / glow (hex). */
-  accent: string;
+  /** Accent token name used by the card. */
+  accent: "violet" | "electric" | "magenta" | "orchid";
+  /** Visibility note shown as a small tag. */
+  visibility: "public" | "private";
 };
 
 export const projects: Project[] = [
   {
     slug: "toolify",
-    title: "Toolify",
+    title: "Toolify for Everyone",
     tagline: {
       en: "A hub matching real-world needs with the right AI tool.",
       vi: "Nơi kết nối nhu cầu thực tế với công cụ AI phù hợp.",
     },
     description: {
-      en: "A multi-tool AI platform for Vietnamese students, founders, freelancers and SMBs. Each tool solves one concrete problem on shared infrastructure (auth, DB, domain) and runs in demo mode even without API keys: PDF translation, AI-provenance watermark removal, smart price comparison and more.",
-      vi: "Nền tảng đa công cụ AI cho sinh viên, founder, freelancer và SMB Việt Nam. Mỗi tool giải quyết một vấn đề cụ thể trên hạ tầng dùng chung (xác thực, DB, domain) và chạy được ở demo mode ngay cả khi chưa có API key: dịch PDF, xoá watermark AI, so sánh giá thông minh và hơn thế.",
+      en: "A multi-tool AI platform for Vietnamese students, founders, freelancers and small businesses. Each tool solves one concrete problem on shared infrastructure (auth, database, domain) and runs in demo mode even without API keys: PDF translation, AI-provenance watermark removal, smart price comparison and more.",
+      vi: "Nền tảng đa công cụ AI cho sinh viên, founder, freelancer và doanh nghiệp nhỏ Việt Nam. Mỗi tool giải quyết một vấn đề cụ thể trên hạ tầng dùng chung (xác thực, cơ sở dữ liệu, domain) và chạy được ở demo mode ngay cả khi chưa có API key: dịch PDF, xoá watermark AI, so sánh giá thông minh và hơn thế.",
     },
     highlights: {
-      en: ["Next.js 14 web + Python agent runner", "Gemini-powered page-by-page PDF translation", "Dockerised, demo-mode first"],
-      vi: ["Web Next.js 14 + Python agent runner", "Dịch PDF từng trang bằng Gemini", "Docker hoá, ưu tiên demo-mode"],
+      en: ["Next.js web + Python agent runner", "Gemini-powered page-by-page PDF translation", "Dockerised, demo-mode first"],
+      vi: ["Web Next.js + Python agent runner", "Dịch PDF từng trang bằng Gemini", "Docker hoá, ưu tiên demo-mode"],
     },
     stack: ["Next.js", "TypeScript", "Python", "Gemini API", "Docker"],
     category: "ai",
-    repo: "https://github.com/ducnolag/Startup-BA",
+    repo: "https://github.com/ducnolag/ToolifyForEveryone",
     year: 2026,
     featured: true,
-    accent: "#C6FF00",
+    accent: "violet",
+    visibility: "public",
   },
   {
     slug: "sv5t",
     title: "SV5T · Sinh viên 5 Tốt",
     tagline: {
-      en: "Digitising a 3-tier student award review process end-to-end.",
+      en: "Digitising the 3-tier “Student of Five Merits” review, end to end.",
       vi: "Số hoá toàn diện quy trình xét duyệt danh hiệu Sinh viên 5 Tốt qua 3 cấp.",
     },
     description: {
-      en: "A microservices platform that digitises registration, evidence submission, appraisal and approval of the national “Sinh viên 5 Tốt” award across University → Province → Central levels. Packaged as 10 Docker containers behind an NGINX gateway, one command to boot.",
-      vi: "Nền tảng microservices số hoá quy trình đăng ký, nộp minh chứng, thẩm định và phê duyệt danh hiệu “Sinh viên 5 Tốt” qua 3 cấp Trường → Tỉnh/Thành → Trung ương. Đóng gói 10 Docker container sau NGINX gateway, khởi chạy bằng một lệnh.",
+      en: "Students' evidence used to live in scattered files, and verifying it cost the Youth Union staff hours. This platform lets students manage and complete their evidence, see which criteria still fall short, and lets the Union review faster. Microservices in NestJS and React, PostgreSQL, 10 Docker containers behind an NGINX gateway.",
+      vi: "Minh chứng của sinh viên vốn rời rạc, và việc kiểm tra tính chính xác bên phía cán bộ Hội rất mất thời gian. Hệ thống giúp sinh viên quản lý, bổ sung minh chứng, biết tiêu chí nào chưa phù hợp, và giúp Hội rút ngắn thời gian xử lý. Microservices NestJS + React, PostgreSQL, 10 Docker container sau NGINX gateway.",
     },
     highlights: {
-      en: ["NestJS 11 microservices + React 19", "PostgreSQL 15, NGINX gateway", "10-container Docker Compose stack"],
-      vi: ["Microservices NestJS 11 + React 19", "PostgreSQL 15, NGINX gateway", "Stack Docker Compose 10 container"],
+      en: ["Team lead of 4, hackathon build", "AI OCR + VNPT eKYC for evidence checks", "NestJS 11 microservices + React 19; UI preview online, back end not hosted yet"],
+      vi: ["Trưởng nhóm 4 thành viên, dự án hackathon", "AI OCR + VNPT eKYC để kiểm tra minh chứng", "Microservices NestJS 11 + React 19; giao diện đã online, backend chưa host"],
     },
     stack: ["NestJS", "React", "PostgreSQL", "Docker", "NGINX"],
-    category: "system",
+    category: "web",
     repo: "https://github.com/ducnolag/SV5T",
+    demo: "https://xet-duyet-sv5t.netlify.app/login",
+    demoKind: "ui-only",
+    role: { en: "Team lead · 4 members", vi: "Trưởng nhóm · 4 thành viên" },
+    cover: "/images/projects/sv5t.jpg",
     year: 2026,
     featured: true,
-    accent: "#00F0FF",
+    accent: "electric",
+    visibility: "public",
   },
   {
-    slug: "banking-churn",
-    title: "Banking Churn Classifier",
+    slug: "misher",
+    title: "MISHER",
     tagline: {
-      en: "Reproducing a 2025 paper on ensemble churn prediction.",
-      vi: "Tái lập một bài báo 2025 về dự đoán khách hàng rời bỏ bằng ensemble.",
+      en: "An AI voice assistant app built for older adults.",
+      vi: "Ứng dụng trợ lý AI bằng giọng nói dành cho người cao tuổi.",
     },
     description: {
-      en: "Faithful reproduction of Bhuria et al. (2025, Discover Sustainability): a hard-voting ensemble (DT / RF / KNN / SVC / XGBoost) on the 10k-row Kaggle bank churn dataset. Full data-quality pipeline, from identifier drop, one-hot and scaling to IQR outlier removal and SMOTE balancing, mapped section by section to the paper.",
-      vi: "Tái lập trung thực nghiên cứu của Bhuria và cộng sự (2025, Discover Sustainability): ensemble hard-voting (DT / RF / KNN / SVC / XGBoost) trên bộ dữ liệu churn ngân hàng 10k dòng của Kaggle. Pipeline chất lượng dữ liệu đầy đủ, từ bỏ định danh, one-hot, scaling đến loại outlier IQR và cân bằng SMOTE, ánh xạ từng mục theo bài báo.",
+      en: "A mobile assistant that older people can simply talk to: voice-first interaction, large readable screens and plain-language answers, so technology helps instead of intimidating. Built with React Native on Expo; the source stays private, the build is open to try.",
+      vi: "Ứng dụng di động mà người lớn tuổi chỉ cần nói chuyện: tương tác bằng giọng nói, màn hình chữ to dễ đọc, câu trả lời dễ hiểu, để công nghệ giúp đỡ thay vì làm họ e ngại. Dựng bằng React Native trên Expo; mã nguồn để riêng tư, bản build mở để dùng thử.",
     },
     highlights: {
-      en: ["Scientific reproduction (student research)", "Voting classifier over 5 models", "Figures regenerated 1:1 with the paper"],
-      vi: ["Tái lập nghiên cứu khoa học (NCKH)", "Voting classifier trên 5 mô hình", "Tái tạo biểu đồ 1:1 với bài báo"],
+      en: ["Voice-first mobile UX", "React Native + Expo build", "Designed for low-vision, low-tech users"],
+      vi: ["Trải nghiệm di động ưu tiên giọng nói", "React Native + bản build Expo", "Thiết kế cho người mắt kém, ít dùng công nghệ"],
     },
-    stack: ["Python", "scikit-learn", "XGBoost", "SMOTE", "pandas"],
-    category: "data",
-    repo: "https://github.com/ducnolag/Banking-Churn",
+    stack: ["React Native", "Expo", "JavaScript", "Speech & LLM APIs"],
+    category: "mobile",
+    demo: "https://expo.dev/accounts/duclagdz23/projects/voice-assistant-mobile/builds/31cdbd34-cbe2-469c-9891-0d1e1a57cf35",
+    demoKind: "build",
     year: 2026,
     featured: true,
-    accent: "#FF2BD6",
+    accent: "magenta",
+    visibility: "private",
+  },
+  {
+    slug: "lab-manager",
+    title: "Lab Room Manager",
+    tagline: {
+      en: "Managing university computer labs without spreadsheets and Zalo threads.",
+      vi: "Quản lý phòng máy thực hành không còn qua sheet và tin nhắn Zalo.",
+    },
+    description: {
+      en: "Lecturers used to book practice labs by email or Zalo and staff tracked everything by hand in sheets. This system schedules rooms, tracks machines and sessions, and logs incidents in one place. C# desktop client on a SQL Server back end.",
+      vi: "Giảng viên mượn phòng qua mail, Zalo; cán bộ quản lý thủ công bằng sheet, rất mất thời gian. Hệ thống đặt lịch phòng, theo dõi máy và ca thực hành, ghi nhận sự cố ở một nơi. Client desktop C# trên nền SQL Server.",
+    },
+    highlights: {
+      en: ["Team lead of 4", "C# client, T-SQL procedures", "Role-based booking workflow"],
+      vi: ["Trưởng nhóm 4 thành viên", "Client C#, procedure T-SQL", "Luồng đặt phòng theo vai trò"],
+    },
+    stack: ["C#", ".NET", "SQL Server", "T-SQL"],
+    category: "system",
+    repo: "https://github.com/ducnolag/QL_Phong_May_Thuc_Hanh",
+    role: { en: "Team lead · 4 members", vi: "Trưởng nhóm · 4 thành viên" },
+    year: 2026,
+    featured: false,
+    accent: "orchid",
+    visibility: "public",
   },
   {
     slug: "data-to-decision",
     title: "Data → Decision Making",
     tagline: {
-      en: "From raw data to decisions, visually.",
-      vi: "Từ dữ liệu thô đến ra quyết định, bằng hình ảnh.",
+      en: "From raw data to decisions. Champion, Data To Decision Making 2025–2026.",
+      vi: "Từ dữ liệu đến ra quyết định. Quán quân cuộc thi Data To Decision Making 2025–2026.",
     },
     description: {
-      en: "An analytics workbook turning datasets into decision-ready dashboards and narratives. Exploratory analysis in Python, exported as interactive HTML reports.",
-      vi: "Bộ phân tích biến dữ liệu thành dashboard và câu chuyện sẵn sàng cho ra quyết định. Phân tích khám phá bằng Python, xuất báo cáo HTML tương tác.",
+      en: "The competition entry that won first place: exploratory analysis in Python turned into decision-ready dashboards and a narrative a non-technical jury could act on, exported as interactive HTML reports.",
+      vi: "Bài dự thi giành giải nhất: phân tích khám phá bằng Python, biến thành dashboard và câu chuyện mà ban giám khảo không chuyên kỹ thuật cũng ra quyết định được, xuất dưới dạng báo cáo HTML tương tác.",
     },
     highlights: {
-      en: ["Exploratory data analysis", "Interactive HTML reports", "Decision-oriented storytelling"],
-      vi: ["Phân tích dữ liệu khám phá", "Báo cáo HTML tương tác", "Kể chuyện hướng quyết định"],
+      en: ["1st place, Data To Decision Making", "Exploratory analysis in Python", "Interactive HTML reports"],
+      vi: ["Giải nhất Data To Decision Making", "Phân tích khám phá bằng Python", "Báo cáo HTML tương tác"],
     },
     stack: ["Python", "pandas", "Plotly", "HTML"],
     category: "data",
     repo: "https://github.com/ducnolag/Data_To_Decision_Making",
     year: 2026,
     featured: false,
-    accent: "#7C3AED",
+    accent: "electric",
+    visibility: "public",
   },
   {
-    slug: "lab-manager",
-    title: "Lab Room Manager",
+    slug: "minigame",
+    title: "Minigame",
     tagline: {
-      en: "Desktop system for managing university computer labs.",
-      vi: "Hệ thống quản lý phòng máy thực hành cho trường đại học.",
+      en: "“Vượt Ải”: a timed quiz-and-code gauntlet for the IT club.",
+      vi: "“Vượt Ải”: thử thách đố vui và code có tính giờ cho CLB CNTT.",
     },
     description: {
-      en: "A C# desktop application with a T-SQL backend for scheduling, tracking and maintaining university practice labs: rooms, machines, sessions and incidents.",
-      vi: "Ứng dụng desktop C# với backend T-SQL để lập lịch, theo dõi và bảo trì phòng máy thực hành: phòng, máy, ca thực hành và sự cố.",
+      en: "A browser game for the IT club's technical rounds: four stages, each monster is a question, the final boss is a coding task you can resubmit for your best score, all inside a 35-minute clock. Contestants enter a round code and play straight from a link.",
+      vi: "Game trên trình duyệt cho vòng kỹ thuật của CLB CNTT: bốn ải, mỗi quái là một câu hỏi, boss cuối là bài code nộp nhiều lần lấy điểm cao nhất, tất cả trong 35 phút. Thí sinh nhập mã đợt thi và chơi ngay từ link.",
     },
     highlights: {
-      en: ["C# desktop client", "SQL Server schema & procedures", "Role-based workflows"],
-      vi: ["Client desktop C#", "Schema & procedure SQL Server", "Luồng theo vai trò"],
+      en: ["4 stages, 35-minute clock, scoring rules", "Coding boss with resubmission", "TypeScript, live on Vercel"],
+      vi: ["4 ải, đồng hồ 35 phút, luật tính điểm", "Boss code nộp nhiều lần", "TypeScript, chạy trên Vercel"],
     },
-    stack: ["C#", ".NET", "SQL Server", "T-SQL"],
-    category: "system",
-    repo: "https://github.com/ducnolag/QL_Phong_May_Thuc_Hanh",
+    stack: ["TypeScript", "Vercel"],
+    category: "web",
+    demo: "https://bit-minigametest.vercel.app/",
+    demoKind: "live",
+    cover: "/images/projects/minigame.jpg",
     year: 2026,
     featured: false,
-    accent: "#00F0FF",
+    accent: "violet",
+    visibility: "private",
   },
   {
-    slug: "fall-detection",
-    title: "Human Fall Detection",
+    slug: "sendmail",
+    title: "Tool Gửi Mail",
     tagline: {
-      en: "Pose-based video analysis that spots a person falling.",
-      vi: "Phân tích video dựa trên tư thế để phát hiện người ngã.",
+      en: "Send one message to many people, personalised, in a minute.",
+      vi: "Gửi một nội dung tới nhiều người, cá nhân hoá, trong một phút.",
     },
     description: {
-      en: "A video pipeline that extracts 17 body key-points per person with YOLOv7-POSE and classifies falling vs. not-falling, exploring LSTM and rule-based approaches on a small real-world dataset.",
-      vi: "Pipeline video trích xuất 17 điểm khớp cơ thể mỗi người bằng YOLOv7-POSE và phân loại ngã / không ngã, thử nghiệm LSTM và luật trên bộ dữ liệu thực tế nhỏ.",
+      en: "A small web tool for bulk, personalised email: paste a recipient list, write once, send to everyone. Built in JavaScript for club and class communication.",
+      vi: "Công cụ web nhỏ để gửi email hàng loạt có cá nhân hoá: dán danh sách người nhận, viết một lần, gửi cho tất cả. Viết bằng JavaScript phục vụ liên lạc câu lạc bộ và lớp.",
     },
     highlights: {
-      en: ["YOLOv7-POSE key-points", "LSTM experiments", "Dockerised inference"],
-      vi: ["Điểm khớp YOLOv7-POSE", "Thử nghiệm LSTM", "Suy luận Docker hoá"],
+      en: ["Bulk send with per-recipient fields", "JavaScript", "Live on Netlify"],
+      vi: ["Gửi hàng loạt với trường theo từng người", "JavaScript", "Đang chạy trên Netlify"],
     },
-    stack: ["Python", "PyTorch", "YOLOv7", "OpenCV"],
-    category: "ai",
-    repo: "https://github.com/ducnolag/Human-Fall-Detection",
+    stack: ["JavaScript", "Netlify"],
+    category: "web",
+    demo: "https://sendmailmanypeople.netlify.app/",
+    demoKind: "live",
     year: 2026,
     featured: false,
-    accent: "#C6FF00",
+    accent: "magenta",
+    visibility: "private",
   },
   {
-    slug: "noodles-shop",
-    title: "Noodles Shop",
+    slug: "noodles",
+    title: "Tiệm Ăn Vặt",
     tagline: {
-      en: "A playful e-commerce front-end for a noodle brand.",
-      vi: "Front-end thương mại điện tử vui nhộn cho một thương hiệu mì.",
+      en: "A playful storefront for a mixed-noodle shop.",
+      vi: "Trang bán hàng vui nhộn cho một tiệm mì trộn.",
     },
     description: {
       en: "Final-term front-end project: product catalogue, cart and checkout flow built with vanilla JavaScript, HTML and CSS. No framework, all hand-rolled.",
@@ -243,24 +297,117 @@ export const projects: Project[] = [
     stack: ["JavaScript", "HTML", "CSS"],
     category: "web",
     repo: "https://github.com/ducnolag/Websitez-Buy_Noodles-FE",
+    demo: "https://tiem-an-vat-ngon-nhat-the-gioi.netlify.app/",
+    demoKind: "live",
+    cover: "/images/projects/noodles.jpg",
     year: 2025,
     featured: false,
-    accent: "#FF2BD6",
+    accent: "orchid",
+    visibility: "public",
   },
 ];
 
+/** Tech words used by the hero's floating glyphs (not the résumé section). */
 export const skills: { group: L; items: string[] }[] = [
-  { group: { en: "AI & Data", vi: "AI & Dữ liệu" }, items: ["Python", "scikit-learn", "XGBoost", "PyTorch", "pandas", "Gemini API", "LLM agents"] },
-  { group: { en: "Web", vi: "Web" }, items: ["TypeScript", "Next.js", "React", "NestJS", "Tailwind CSS", "Three.js"] },
-  { group: { en: "Systems", vi: "Hệ thống" }, items: ["PostgreSQL", "SQL Server", "Docker", "NGINX", "C# / .NET"] },
-  { group: { en: "Business Analysis", vi: "Phân tích nghiệp vụ" }, items: ["Requirements", "Process modelling", "Data storytelling", "Product thinking"] },
+  { group: { en: "AI & Data", vi: "AI & Dữ liệu" }, items: ["Python", "pandas", "Gemini API", "LLM agents"] },
+  { group: { en: "Web", vi: "Web" }, items: ["TypeScript", "Next.js", "React", "NestJS", "Three.js"] },
+  { group: { en: "Systems", vi: "Hệ thống" }, items: ["PostgreSQL", "SQL Server", "Docker", "C# / .NET"] },
+  { group: { en: "Business Analysis", vi: "Phân tích nghiệp vụ" }, items: ["BRD / SRS", "BPMN", "Figma", "User Story"] },
 ];
+
+/* ────────────────────────────────────────────────────────────
+   Résumé, as written in the CV (Oct 2026). This drives the Skills section.
+   ──────────────────────────────────────────────────────────── */
+export const resume = {
+  headline: { en: "Business Analyst in the making", vi: "Business Analyst đang trên đường" } as L,
+  education: {
+    school: { en: "Banking Academy of Vietnam", vi: "Học viện Ngân hàng" } as L,
+    faculty: { en: "Faculty of Information Technology & Digital Economics", vi: "Khoa Công nghệ thông tin & Kinh tế số" } as L,
+    degree: { en: "BSc, Management Information Systems", vi: "Cử nhân Hệ thống thông tin quản lý" } as L,
+    period: "2024 – 2028",
+    gpa: "3.85 / 4.0",
+  },
+  experience: [
+    {
+      company: "AI For Vietnam Co., Ltd",
+      role: { en: "Data Annotator", vi: "Annotator" } as L,
+      period: "11/2025 – 04/2026",
+      summary: {
+        en: "Labelled training data and learned how models read it; handled safety labelling for harmful and jailbreak cases.",
+        vi: "Gán nhãn dữ liệu, hiểu logic dữ liệu mà máy hiểu; xử lý gán nhãn các trường hợp nguy hiểm, vi phạm đạo đức (jailbreak).",
+      } as L,
+    },
+  ],
+  skillGroups: [
+    {
+      group: { en: "Business analysis", vi: "Kỹ năng chuyên môn" } as L,
+      items: {
+        en: [
+          "Gathering, analysing and clarifying business requirements; writing BRD, SRS, user stories and use cases",
+          "Modelling and standardising business processes with BPMN",
+          "Wireframes and functional flows in Figma, Draw.io and Bizagi",
+          "Working knowledge of APIs and SQL to query data and check business logic",
+        ],
+        vi: [
+          "Thu thập, phân tích và làm rõ yêu cầu nghiệp vụ; xây dựng BRD, SRS, User Story, Use Case",
+          "Phân tích, mô hình hoá và chuẩn hoá quy trình nghiệp vụ bằng BPMN",
+          "Xây dựng wireframe và luồng chức năng trên Figma, Draw.io, Bizagi",
+          "Kiến thức cơ bản về API và SQL để truy vấn và kiểm tra logic nghiệp vụ trên cơ sở dữ liệu",
+        ],
+      } as L<string[]>,
+    },
+    {
+      group: { en: "Applied AI", vi: "Ứng dụng AI" } as L,
+      items: {
+        en: [
+          "Using AI assistants (Claude, ChatGPT…) to draft project documents faster and better",
+          "Using AI tools to build prototypes, demos, wireframes and mock-ups that make requirements visible and shorten discussions",
+        ],
+        vi: [
+          "Sử dụng AI (Claude, ChatGPT,…) để soạn thảo tài liệu dự án nhanh và hiệu quả hơn",
+          "Dùng công cụ AI dựng prototype/demo, wireframe và mockup để trực quan hoá yêu cầu, rút ngắn trao đổi",
+        ],
+      } as L<string[]>,
+    },
+    {
+      group: { en: "Office tools", vi: "Tin học" } as L,
+      items: {
+        en: ["Proficient in Word, Excel, PowerPoint and Canva for documents and reports"],
+        vi: ["Thành thạo Word, Excel, PowerPoint, Canva phục vụ soạn thảo tài liệu và báo cáo"],
+      } as L<string[]>,
+    },
+    {
+      group: { en: "Soft skills", vi: "Kỹ năng mềm" } as L,
+      items: {
+        en: [
+          "Analytical, logical thinking and the habit of clarifying the problem; communicates well with many stakeholders",
+          "Responsible and careful with requirements and documents; adapts quickly to a new project environment",
+        ],
+        vi: [
+          "Tư duy phân tích, logic và khả năng làm rõ vấn đề; giao tiếp hiệu quả với nhiều bên liên quan",
+          "Có trách nhiệm và cẩn thận trong xử lý yêu cầu, tài liệu; thích nghi nhanh với môi trường dự án",
+        ],
+      } as L<string[]>,
+    },
+  ],
+  certificates: [
+    { name: { en: "MOS: Excel, Word, PowerPoint", vi: "MOS Excel, Word, PowerPoint" } as L, year: "2025" },
+    { name: { en: "Introduction to CRM with HubSpot", vi: "Introduction to CRM with HubSpot" } as L, year: "2026" },
+    { name: { en: "Gemini Certified Student", vi: "Gemini Certified Student" } as L, year: "2026" },
+  ],
+  awards: [
+    { name: { en: "Champion, Data To Decision Making competition", vi: "Quán quân cuộc thi Data To Decision Making" } as L, year: "2025 – 2026" },
+    { name: { en: "“Student of Five Merits” title, Academy level", vi: "Danh hiệu Sinh viên 5 tốt cấp Học viện" } as L, year: "2025 – 2026" },
+    { name: { en: "Academic excellence scholarship, semester 2", vi: "Học bổng khuyến khích học tập xuất sắc kỳ 2" } as L, year: "2025 – 2026" },
+    { name: { en: "Academic excellence scholarship, semester 1", vi: "Học bổng khuyến khích học tập xuất sắc kỳ 1" } as L, year: "2024 – 2025" },
+  ],
+} as const;
 
 export const ui = {
   nav: {
     about: { en: "About", vi: "Giới thiệu" },
     projects: { en: "Projects", vi: "Dự án" },
-    skills: { en: "Skills", vi: "Kỹ năng" },
+    skills: { en: "Résumé", vi: "Hồ sơ" },
     contact: { en: "Contact", vi: "Liên hệ" },
   },
   hero: {
@@ -306,30 +453,47 @@ export const ui = {
       vi: "Sản phẩm tốt không chỉ giải quyết vấn đề. Nó để lại một trải nghiệm đáng nhớ.",
     },
     facts: {
-      en: ["Based in Vietnam", "BA × AI × Full-stack", "Open to collaborations"],
-      vi: ["Sống tại Việt Nam", "BA × AI × Full-stack", "Sẵn sàng hợp tác"],
+      en: ["Based in Hanoi", "BA × AI × Full-stack", "Open to internships & collaborations"],
+      vi: ["Sống tại Hà Nội", "BA × AI × Full-stack", "Sẵn sàng thực tập & hợp tác"],
     } as L<string[]>,
   },
   projects: {
     heading: { en: "Selected work", vi: "Dự án tiêu biểu" },
-    viewRepo: { en: "View on GitHub", vi: "Xem trên GitHub" },
-    viewDemo: { en: "Live demo", vi: "Bản demo" },
+    lede: {
+      en: "Eight things I built or led. Live ones open in a new tab; private ones show their build instead of the code.",
+      vi: "Tám sản phẩm mình đã làm hoặc dẫn dắt. Cái nào đang chạy thì mở tab mới; cái để riêng tư thì xem bản build thay vì mã.",
+    },
+    viewRepo: { en: "Source on GitHub", vi: "Mã nguồn trên GitHub" },
+    viewDemo: { en: "Open live site", vi: "Mở trang web" },
+    viewUiOnly: { en: "Preview the UI (back end offline)", vi: "Xem giao diện (backend chưa chạy)" },
+    viewBuild: { en: "Open the app build", vi: "Mở bản build ứng dụng" },
+    privateTag: { en: "Private source", vi: "Mã riêng tư" },
+    publicTag: { en: "Open source", vi: "Mã mở" },
     all: { en: "All", vi: "Tất cả" },
     filters: {
       ai: { en: "AI", vi: "AI" },
       web: { en: "Web", vi: "Web" },
       data: { en: "Data", vi: "Dữ liệu" },
       system: { en: "Systems", vi: "Hệ thống" },
+      mobile: { en: "Mobile", vi: "Di động" },
     } as Record<Project["category"], L>,
     more: { en: "More on GitHub", vi: "Xem thêm trên GitHub" },
     dragHint: { en: "Drag sideways", vi: "Kéo ngang" },
+    coverAlt: { en: "Screenshot of", vi: "Ảnh chụp màn hình" },
   },
   marquee: {
     en: "Ideas → products · Business Analyst · AI Engineer · Full-stack · ",
     vi: "Ý tưởng → sản phẩm · Business Analyst · AI Engineer · Full-stack · ",
   } as L,
   skills: {
-    heading: { en: "Toolbox", vi: "Hộp công cụ" },
+    heading: { en: "What I bring", vi: "Kỹ năng & hồ sơ" },
+    education: { en: "Education", vi: "Học vấn" },
+    gpa: { en: "GPA", vi: "GPA" },
+    experience: { en: "Experience", vi: "Kinh nghiệm" },
+    skills: { en: "Skills", vi: "Kỹ năng" },
+    certificates: { en: "Certificates", vi: "Chứng chỉ" },
+    awards: { en: "Honours & awards", vi: "Danh hiệu & giải thưởng" },
+    downloadCv: { en: "Download CV (PDF)", vi: "Tải CV (PDF)" },
   },
   contact: {
     heading: { en: "Let's build something", vi: "Cùng làm gì đó nhé" },
@@ -337,9 +501,14 @@ export const ui = {
       en: "Have an idea, a role, or just want to talk products and AI? My inbox is open.",
       vi: "Có ý tưởng, một vị trí, hay chỉ muốn trò chuyện về sản phẩm và AI? Hộp thư của mình luôn mở.",
     },
-    emailCta: { en: "Say hello", vi: "Gửi lời chào" },
+    emailCta: { en: "Write to me", vi: "Viết thư cho mình" },
+    emailSubject: { en: "Hello from your portfolio", vi: "Chào Đức, mình xem portfolio của bạn" },
+    openGmail: { en: "Open in Gmail", vi: "Mở bằng Gmail" },
+    openMailApp: { en: "Open mail app", vi: "Mở ứng dụng mail" },
     copy: { en: "Copy email", vi: "Sao chép email" },
     copied: { en: "Copied!", vi: "Đã sao chép!" },
+    cv: { en: "Download CV", vi: "Tải CV" },
+    cvNote: { en: "PDF · updated Oct 2026", vi: "PDF · cập nhật 10/2026" },
   },
   footer: {
     built: { en: "Built with Next.js, Three.js & too much coffee.", vi: "Dựng bằng Next.js, Three.js & rất nhiều cà phê." },

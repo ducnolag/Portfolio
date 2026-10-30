@@ -7,9 +7,9 @@ import { Icon } from "@/components/ui/Icon";
 import { Reveal } from "@/components/ui/Reveal";
 
 /**
- * Closing chapter on the ink-3 ground: the headline at display size, one
- * sentence, the mailto pill and a copy-email button that announces "Copied!"
- * through a polite live region. Parts arrive in reading order.
+ * Closing chapter on the ink-3 ground. The primary action opens a Gmail
+ * compose window (works without a desktop mail client); the mail-app link,
+ * copy-email and CV download sit beside it. Parts arrive in reading order.
  */
 export function Contact() {
   const { t } = useLang();
@@ -28,6 +28,10 @@ export function Contact() {
       window.location.href = `mailto:${profile.email}`;
     }
   };
+
+  const subject = encodeURIComponent(t(ui.contact.emailSubject));
+  const gmail = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(profile.email)}&su=${subject}`;
+  const mailto = `mailto:${profile.email}?subject=${subject}`;
 
   return (
     <section
@@ -50,15 +54,35 @@ export function Contact() {
           <Reveal as="p" variant="rise" delay={80} className="mt-7 max-w-[44ch] text-[clamp(1.125rem,1.5vw,1.375rem)] leading-[1.45] text-fg">
             {t(ui.contact.body)}
           </Reveal>
-          <Reveal variant="rise" delay={160} className="mt-9 flex flex-wrap items-center gap-3">
-            <a href={`mailto:${profile.email}`} className="btn btn-primary">
-              <Icon name="mail" size={18} />
-              {t(ui.contact.emailCta)}
-            </a>
-            <button type="button" className="btn btn-ghost" onClick={copy} data-copied={copied ? "" : undefined}>
-              <Icon name={copied ? "check" : "copy"} size={18} />
-              {copied ? t(ui.contact.copied) : t(ui.contact.copy)}
-            </button>
+
+          {/* Action group: 2×2 on phones, one row from 640px */}
+          <Reveal variant="rise" delay={160} className="mt-9">
+            <ul className="m-0 grid list-none grid-cols-2 gap-3 p-0 sm:flex sm:flex-wrap sm:items-center">
+              <li>
+                <a href={gmail} target="_blank" rel="noopener noreferrer" className="btn btn-primary w-full sm:w-auto">
+                  <Icon name="mail" size={18} />
+                  {t(ui.contact.emailCta)}
+                </a>
+              </li>
+              <li>
+                <a href={mailto} className="btn btn-ghost w-full sm:w-auto">
+                  {t(ui.contact.openMailApp)}
+                </a>
+              </li>
+              <li>
+                <button type="button" className="btn btn-ghost w-full sm:w-auto" onClick={copy} data-copied={copied ? "" : undefined}>
+                  <Icon name={copied ? "check" : "copy"} size={18} />
+                  {copied ? t(ui.contact.copied) : t(ui.contact.copy)}
+                </button>
+              </li>
+              <li>
+                <a href={profile.cv.href} download={profile.cv.filename} className="btn btn-ghost w-full sm:w-auto">
+                  <Icon name="download" size={18} />
+                  {t(ui.contact.cv)}
+                </a>
+              </li>
+            </ul>
+            <p className="mt-3 max-w-none text-[0.875rem] text-fg-muted">{t(ui.contact.cvNote)}</p>
             <span aria-live="polite" className="sr-only">
               {copied ? t(ui.contact.copied) : ""}
             </span>
@@ -67,7 +91,7 @@ export function Contact() {
 
         <Reveal variant="fade" delay={240} className="self-end lg:col-span-4 lg:col-start-9">
           <p className="m-0 max-w-none break-all text-[clamp(1.125rem,1.5vw,1.375rem)] font-medium">
-            <a href={`mailto:${profile.email}`} className="no-underline hover:text-orchid">
+            <a href={mailto} className="no-underline hover:text-orchid">
               {profile.email}
             </a>
           </p>

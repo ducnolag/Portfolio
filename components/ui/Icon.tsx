@@ -9,6 +9,7 @@ export type IconName =
   | "arrow-up-right"
   | "arrow-right"
   | "hand"
+  | "download"
   | "github"
   | "linkedin"
   | "mail"
@@ -41,6 +42,13 @@ const STROKED: Record<Exclude<IconName, "github" | "linkedin">, React.ReactNode>
       <path d="M11 11.5V4.5a1.5 1.5 0 0 1 3 0V12" />
       <path d="M14 11.5V6a1.5 1.5 0 0 1 3 0v6" />
       <path d="M17 12.5V8.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-2.5a5 5 0 0 1-4-2l-3.2-4.3a1.6 1.6 0 0 1 2.4-2.1L8 14.5" />
+    </>
+  ),
+  download: (
+    <>
+      <path d="M12 4v11" />
+      <path d="m7.5 10.5 4.5 4.5 4.5-4.5" />
+      <path d="M4.5 15.5v2.5a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-2.5" />
     </>
   ),
   mail: (
