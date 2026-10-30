@@ -1,20 +1,44 @@
 "use client";
 
 import Image from "next/image";
-import { motion, useMotionValue, useScroll, useTransform } from "motion/react";
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type FocusEvent, type ReactNode } from "react";
+import { motion, useScroll, useTransform } from "motion/react";
+import { RobotHead, type RobotHeadState } from "robot-heads";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import { projects, ui, type Project } from "@/lib/content";
 import { useLang } from "@/lib/i18n";
 import { useReducedMotion } from "@/lib/hooks";
+import { guideState, requestHop, setGuideAnchor, type GuideFace } from "@/lib/guide";
 import { Icon } from "@/components/ui/Icon";
 import { Reveal } from "@/components/ui/Reveal";
-import { Tilt } from "@/components/ui/Tilt";
+import { useTypewriter, type TypeMode } from "@/components/ui/useTypewriter";
 
-const FEATURED = projects.filter((p) => p.featured);
-const OTHERS = projects.filter((p) => !p.featured);
-const PIN_QUERY = "(min-width: 1024px)";
+const FACE_BY_CATEGORY: Record<Project["category"], GuideFace> = {
+  ai: "thinking",
+  data: "working",
+  web: "happy",
+  mobile: "listening",
+  system: "searching",
+};
+const ROBOT_FACE: Record<GuideFace, RobotHeadState> = {
+  idle: "idle",
+  thinking: "thinking",
+  searching: "searching",
+  listening: "listening",
+  speaking: "speaking",
+  working: "working",
+  happy: "happy",
+  error: "error",
+  sleeping: "sleeping",
+};
 
 const accentVar = (p: Project) => `var(--${p.accent})`;
+
+const useMounted = () =>
+  useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
 /** "Toolify for Everyone" → "TE"-style initials; single words take their first two letters. */
 function initialsOf(title: string) {
@@ -27,7 +51,6 @@ function initialsOf(title: string) {
 function Pattern({ slug }: { slug: string }) {
   switch (slug) {
     case "toolify": {
-      // a grid of tool-like rounded tiles
       const tiles: ReactNode[] = [];
       for (let r = 0; r < 4; r++)
         for (let c = 0; c < 7; c++)
@@ -37,7 +60,6 @@ function Pattern({ slug }: { slug: string }) {
       return <g fill="currentColor">{tiles}</g>;
     }
     case "misher":
-      // concentric voice-wave rings radiating from the lower left
       return (
         <g fill="none" stroke="currentColor" strokeWidth={12} strokeLinecap="round">
           {[90, 200, 310, 420, 530, 640, 750, 860, 970].map((r, i) => (
@@ -46,7 +68,6 @@ function Pattern({ slug }: { slug: string }) {
         </g>
       );
     case "lab-manager": {
-      // a seat-map grid with an aisle
       const seats: ReactNode[] = [];
       for (let r = 0; r < 6; r++)
         for (let c = 0; c < 12; c++) {
@@ -56,7 +77,6 @@ function Pattern({ slug }: { slug: string }) {
       return <g fill="currentColor">{seats}</g>;
     }
     case "data-to-decision": {
-      // bars and a decision line
       const bars = [220, 340, 280, 460, 390, 540, 480, 620];
       return (
         <g>
@@ -76,7 +96,6 @@ function Pattern({ slug }: { slug: string }) {
       );
     }
     case "sendmail":
-      // stacked envelopes
       return (
         <g fill="none" stroke="currentColor" strokeWidth={8} strokeLinejoin="round">
           {[0, 1, 2, 3].map((i) => (
@@ -98,40 +117,79 @@ function Pattern({ slug }: { slug: string }) {
   }
 }
 
-function GeneratedCover({ project: p, compact = false }: { project: Project; compact?: boolean }) {
+export function GeneratedCover({ project: p }: { project: Project }) {
   return (
     <div className="absolute inset-0 bg-ink-3" style={{ color: accentVar(p) }} aria-hidden>
       <svg viewBox="0 0 1200 750" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full">
         <Pattern slug={p.slug} />
       </svg>
-      <span
-        className={`font-condensed absolute bottom-[6%] left-[5%] font-extrabold leading-none tracking-[-0.04em] ${compact ? "text-[clamp(3rem,9vw,5rem)]" : "text-[clamp(4rem,12vw,9rem)]"}`}
-        style={{ color: accentVar(p) }}
-      >
+      <span className="font-condensed absolute bottom-[4%] left-[6%] text-[2rem] font-extrabold leading-none tracking-[-0.04em]" style={{ color: accentVar(p) }}>
         {initialsOf(p.title)}
       </span>
     </div>
   );
 }
 
-/** Cover frame: real screenshot or generated art; scroll parallax inside, scale on hover (CSS). */
-function Cover({ project: p, compact = false, sizes }: { project: Project; compact?: boolean; sizes: string }) {
+/** 160×100 thumbnail with a ±4% scroll drift inside its frame. */
+function Thumb({ project: p }: { project: Project }) {
   const { t } = useLang();
   const reduced = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], ["-6%", "6%"]);
+  const y = useTransform(scrollYProgress, [0, 1], ["-4%", "4%"]);
   return (
-    <div ref={ref} className="pcover absolute inset-0 overflow-clip bg-ink-3">
-      <motion.div className="absolute -inset-y-[8%] inset-x-0" style={reduced ? undefined : { y }}>
-        <div className="pcover-media relative h-full w-full">
-          {p.cover ? (
-            <Image src={p.cover} alt={`${t(ui.projects.coverAlt)} ${p.title}`} fill sizes={sizes} className="object-cover object-top" />
-          ) : (
-            <GeneratedCover project={p} compact={compact} />
-          )}
-        </div>
+    <div ref={ref} className="relative h-[120px] w-full shrink-0 overflow-clip rounded-[10px] bg-ink-3 sm:h-[100px] sm:w-[160px]">
+      <motion.div className="absolute -inset-y-[6%] inset-x-0" style={reduced ? undefined : { y }}>
+        {p.cover ? (
+          <Image src={p.cover} alt={`${t(ui.projects.coverAlt)} ${p.title}`} fill sizes="(min-width: 640px) 160px, 80vw" className="object-cover object-top" />
+        ) : (
+          <GeneratedCover project={p} />
+        )}
       </motion.div>
+    </div>
+  );
+}
+
+/** Lag's speech bubble: types in when active, caret while typing, full text for SSR / reduced. */
+function Bubble({
+  text,
+  mode,
+  active,
+  reduced,
+  onTypingChange,
+  bubbleRef,
+  face,
+  showAvatar,
+}: {
+  text: string;
+  mode: TypeMode;
+  active: boolean;
+  reduced: boolean;
+  onTypingChange: (typing: boolean) => void;
+  bubbleRef: (el: HTMLDivElement | null) => void;
+  face: GuideFace;
+  showAvatar: boolean;
+}) {
+  const mounted = useMounted();
+  const { shown, phase } = useTypewriter(text, mode, 18, reduced, () => onTypingChange(false));
+  useEffect(() => {
+    if (phase === "typing") onTypingChange(true);
+  }, [phase, onTypingChange]);
+  return (
+    <div className="relative">
+      {showAvatar && mounted && (
+        <span className={`thread-avatar ${active ? "is-on" : ""}`} aria-hidden>
+          <RobotHead size={56} state={active ? ROBOT_FACE[face] : "idle"} interactive={false} antenna={false} color="#7c3aed" trimColor="#9c92c4" screenColor="#efeafc" />
+        </span>
+      )}
+      <Reveal variant="pop" className="bubble">
+        <div ref={bubbleRef} data-typing={phase} className="bubble-text">
+          <p className="m-0 max-w-none text-[1.125rem] leading-[1.45] text-fg">
+            {shown}
+            {phase === "typing" && <span className="caret" aria-hidden />}
+          </p>
+        </div>
+      </Reveal>
     </div>
   );
 }
@@ -146,27 +204,26 @@ function Tags({ project: p }: { project: Project }) {
   );
 }
 
-function Actions({ project: p, compact = false }: { project: Project; compact?: boolean }) {
+function Links({ project: p }: { project: Project }) {
   const { t } = useLang();
   const demoLabel =
     p.demoKind === "ui-only" ? ui.projects.viewUiOnly : p.demoKind === "build" ? ui.projects.viewBuild : ui.projects.viewDemo;
-  const size = compact ? "text-[0.9375rem]" : "text-[1rem]";
   return (
-    <ul className="m-0 flex list-none flex-wrap gap-x-6 gap-y-2 p-0">
+    <ul className="m-0 flex list-none flex-wrap gap-x-5 gap-y-2 p-0 text-[0.9375rem]">
       {p.demo && (
         <li>
-          <a href={p.demo} target="_blank" rel="noopener noreferrer" className={`link-arrow ${size}`}>
+          <a href={p.demo} target="_blank" rel="noopener noreferrer" className="link-arrow">
             {t(demoLabel)}
-            <Icon name="arrow-up-right" size={16} />
+            <Icon name="arrow-up-right" size={15} />
           </a>
         </li>
       )}
       {p.repo && (
         <li>
-          <a href={p.repo} target="_blank" rel="noopener noreferrer" className={`link-arrow ${size}`}>
-            <Icon name="github" size={18} />
+          <a href={p.repo} target="_blank" rel="noopener noreferrer" className="link-arrow">
+            <Icon name="github" size={16} />
             {t(ui.projects.viewRepo)}
-            <Icon name="arrow-up-right" size={16} />
+            <Icon name="arrow-up-right" size={15} />
           </a>
         </li>
       )}
@@ -174,169 +231,141 @@ function Actions({ project: p, compact = false }: { project: Project; compact?: 
   );
 }
 
-/** Featured poster: cover + body side by side on the held stage, stacked in the drag row. */
-function FeaturedCard({ project: p, index }: { project: Project; index: number }) {
+function Card({ project: p }: { project: Project }) {
   const { t } = useLang();
   const primary = p.demo ?? p.repo;
   return (
-    <Reveal as="li" variant="rise" delay={index * 80} className="gallery-card">
-      <Tilt className="h-full" surfaceClassName="h-full">
-        <article
-          className="pcard relative flex h-full flex-col overflow-clip rounded-[var(--radius-l)] bg-ink-2 lg:flex-row"
-          style={{ "--accent": accentVar(p) } as CSSProperties}
-        >
-          <span aria-hidden className="pcard-edge absolute inset-x-0 top-0 z-10 h-1 bg-[var(--accent)]" />
-          <div className="relative aspect-[16/10] w-full lg:aspect-auto lg:h-full lg:w-[46%] lg:shrink-0">
-            <Cover project={p} sizes="(min-width: 1024px) 34vw, 84vw" />
+    <Reveal variant="rise" delay={120} className="mt-4">
+      <article className="tcard relative flex flex-col gap-4 overflow-clip rounded-[var(--radius-m)] bg-ink-2 p-4 sm:flex-row sm:gap-5 sm:p-5" style={{ "--accent": accentVar(p) } as CSSProperties}>
+        <span aria-hidden className="tcard-edge absolute inset-y-0 left-0 w-px bg-[var(--accent)]" />
+        <Thumb project={p} />
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <h3 className="m-0 text-[1.5rem] font-semibold leading-[1.1] tracking-[-0.02em]">
+            {primary ? (
+              <a href={primary} target="_blank" rel="noopener noreferrer" className="no-underline transition-colors duration-200 hover:text-[var(--accent)]">
+                {p.title}
+              </a>
+            ) : (
+              p.title
+            )}
+          </h3>
+          <p className="m-0 max-w-[44ch] text-[1rem] leading-[1.45] text-fg">{t(p.tagline)}</p>
+          {p.role && <p className="m-0 max-w-none text-[0.875rem] text-orchid">{t(p.role)}</p>}
+          <p className="m-0 max-w-none text-[0.875rem] text-fg-muted tabular-nums">
+            {p.year} · {p.stack.join(" · ")}
+          </p>
+          <div className="mt-1 flex flex-col gap-2.5">
+            <Tags project={p} />
+            <Links project={p} />
           </div>
-          <div className="flex min-w-0 flex-1 flex-col gap-3 p-[clamp(1.25rem,2.2vw,2.25rem)] lg:gap-3.5">
-            <h3 className="font-condensed m-0 text-[clamp(1.875rem,3.4vw,3.25rem)] font-extrabold leading-[0.95] tracking-[-0.035em]">
-              {primary ? (
-                <a href={primary} target="_blank" rel="noopener noreferrer" className="no-underline transition-colors duration-200 hover:text-[var(--accent)]">
-                  {p.title}
-                </a>
-              ) : (
-                p.title
-              )}
-            </h3>
-            <p className="m-0 max-w-[32ch] text-[clamp(1.0625rem,1.3vw,1.25rem)] font-medium leading-[1.3] text-fg">{t(p.tagline)}</p>
-            {p.role && <p className="m-0 max-w-none text-[0.9375rem] text-orchid">{t(p.role)}</p>}
-            <p className="m-0 max-w-[58ch] text-[0.9375rem] leading-[1.5] text-fg-muted line-clamp-4 lg:line-clamp-3">{t(p.description)}</p>
-            <ul className="m-0 list-none space-y-1 p-0 text-[0.9375rem] leading-[1.45] text-fg">
-              {t(p.highlights).slice(0, 3).map((h) => (
-                <li key={h} className="flex gap-3">
-                  <span aria-hidden className="mt-[0.7em] h-px w-4 shrink-0 bg-[var(--accent)]" />
-                  {h}
-                </li>
-              ))}
-            </ul>
-            <p className="m-0 max-w-none text-[0.875rem] text-fg-muted tabular-nums">
-              {p.year} · {p.stack.join(" · ")}
-            </p>
-            <div className="mt-auto flex flex-col gap-3 pt-2">
-              <Tags project={p} />
-              <Actions project={p} />
-            </div>
-          </div>
-        </article>
-      </Tilt>
+        </div>
+      </article>
     </Reveal>
   );
 }
 
-/** Compact card for the grid: cover strip, title, tagline, stack, links. */
-function GridCard({ project: p, index }: { project: Project; index: number }) {
-  const { t } = useLang();
-  const primary = p.demo ?? p.repo;
-  return (
-    <Reveal as="li" variant="rise" delay={(index % 2) * 80}>
-      <Tilt max={3} className="h-full" surfaceClassName="h-full">
-        <article
-          className="pcard relative flex h-full flex-col overflow-clip rounded-[var(--radius-l)] bg-ink-2"
-          style={{ "--accent": accentVar(p) } as CSSProperties}
-        >
-          <span aria-hidden className="pcard-edge absolute inset-x-0 top-0 z-10 h-1 bg-[var(--accent)]" />
-          <div className="relative aspect-[2/1] w-full">
-            <Cover project={p} compact sizes="(min-width: 768px) 46vw, 92vw" />
-          </div>
-          <div className="flex flex-1 flex-col gap-3 p-[clamp(1.25rem,2vw,1.75rem)]">
-            <h3 className="font-condensed m-0 text-[clamp(1.5rem,2.2vw,2rem)] font-extrabold leading-[1] tracking-[-0.03em]">
-              {primary ? (
-                <a href={primary} target="_blank" rel="noopener noreferrer" className="no-underline transition-colors duration-200 hover:text-[var(--accent)]">
-                  {p.title}
-                </a>
-              ) : (
-                p.title
-              )}
-            </h3>
-            <p className="m-0 max-w-[40ch] text-[1rem] leading-[1.45] text-fg">{t(p.tagline)}</p>
-            {p.role && <p className="m-0 max-w-none text-[0.875rem] text-orchid">{t(p.role)}</p>}
-            <p className="m-0 max-w-none text-[0.875rem] text-fg-muted tabular-nums">
-              {p.year} · {p.stack.join(" · ")}
-            </p>
-            <div className="mt-auto flex flex-col gap-3 pt-1">
-              <Tags project={p} />
-              <Actions project={p} compact />
-            </div>
-          </div>
-        </article>
-      </Tilt>
-    </Reveal>
-  );
-}
+type EntryData = { key: string; text: string; face: GuideFace; project?: Project };
+/** Faces per entry index: intro, the projects by category, outro. Language-independent. */
+const FACES: GuideFace[] = ["speaking", ...projects.map((p) => FACE_BY_CATEGORY[p.category]), "speaking"];
 
 /**
- * Selected work. On ≥1024px with motion allowed, the three featured posters
- * move sideways while the vertical scroll holds the stage: the held block is
- * (100svh + dx) tall where dx = track overflow, so 1px of scroll is 1px of
- * travel and the hold ends when the last card meets the right margin
- * (x = −progress × dx via useScroll on the block, ["start start", "end end"]).
- * Phones, narrow windows and reduced motion get the native drag row with
- * scroll snapping. The other five follow as a two-column grid.
+ * Selected work, told by Lag as a dialogue thread: an intro bubble, one
+ * bubble + compact card per project, an outro bubble. The entry whose bubble
+ * is nearest 40% of the viewport is active: its text types in, and the DOM
+ * writes guideState (owner, activeIndex, anchor on the bubble's left, face
+ * by category, talking while typing) plus a hop request so the 3D Lag moves
+ * to it. Desktop: Lag's empty lane on the left third, thread right of centre.
+ * Phone: full-width thread with a 72px gutter and a 2D RobotHead avatar.
  */
 export function Projects() {
   const { t } = useLang();
   const reduced = useReducedMotion();
-  const galleryRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLUListElement>(null);
-  const [pinned, setPinned] = useState(false);
-  const [height, setHeight] = useState<string | undefined>(undefined);
-  const dx = useMotionValue(0);
+  const sectionRef = useRef<HTMLElement>(null);
+  const threadRef = useRef<HTMLOListElement>(null);
+  const bubbles = useRef<(HTMLDivElement | null)[]>([]);
+  const [active, setActive] = useState(-1);
+  const activeRef = useRef(-1);
+  const onScreen = useRef(false);
 
-  const { scrollYProgress } = useScroll({ target: galleryRef, offset: ["start start", "end end"] });
-  const x = useTransform(() => -scrollYProgress.get() * dx.get());
+  const entries: EntryData[] = [
+    { key: "intro", text: t(ui.projects.intro), face: "speaking" },
+    ...projects.map((p) => ({ key: p.slug, text: t(p.lagSays), face: FACE_BY_CATEGORY[p.category], project: p })),
+    { key: "outro", text: t(ui.projects.outro), face: "speaking" },
+  ];
 
-  const measure = useCallback(() => {
-    const root = galleryRef.current;
-    const track = trackRef.current;
-    if (!root || !track) return;
-    const wide = window.matchMedia(PIN_QUERY).matches && !reduced;
-    if (!wide) {
-      delete root.dataset.pinned;
-      dx.set(0);
-      setPinned(false);
-      setHeight(undefined);
-      return;
-    }
-    root.dataset.pinned = ""; // measure the row as it would be when pinned
-    const d = track.scrollWidth - track.clientWidth;
-    const on = d > 0 && d < window.innerHeight * 3;
-    if (!on) delete root.dataset.pinned;
-    dx.set(on ? d : 0);
-    setPinned(on);
-    setHeight(on ? `calc(100svh + ${Math.round(d)}px)` : undefined);
-  }, [dx, reduced]);
+  /* The thread line draws itself as the reader goes down */
+  const { scrollYProgress } = useScroll({ target: threadRef, offset: ["start 60%", "end 60%"] });
+  const pathLength = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
+  /* Active entry = bubble nearest 40% of the viewport; recomputed on scroll via rAF */
   useEffect(() => {
-    const raf = requestAnimationFrame(measure);
-    const mq = window.matchMedia(PIN_QUERY);
-    window.addEventListener("resize", measure);
-    mq.addEventListener("change", measure);
-    document.fonts?.ready.then(measure).catch(() => {});
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", measure);
-      mq.removeEventListener("change", measure);
+    let raf = 0;
+    const pick = () => {
+      raf = 0;
+      if (!onScreen.current) return;
+      const target = window.innerHeight * 0.4;
+      let best = -1;
+      let bestD = Infinity;
+      bubbles.current.forEach((el, i) => {
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        const d = Math.abs(r.top + r.height / 2 - target);
+        if (d < bestD) {
+          bestD = d;
+          best = i;
+        }
+      });
+      if (best !== -1) setGuideAnchor(bubbles.current[best], "left");
+      if (best !== activeRef.current) {
+        activeRef.current = best;
+        setActive(best);
+        guideState.activeIndex = best;
+        guideState.face = FACES[best] ?? "speaking";
+        requestHop();
+      }
     };
-  }, [measure]);
+    const schedule = () => {
+      if (!raf) raf = requestAnimationFrame(pick);
+    };
+    const section = sectionRef.current;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        onScreen.current = e.isIntersecting;
+        if (e.isIntersecting) {
+          guideState.owner = "projects";
+          schedule();
+        } else if (guideState.owner === "projects") {
+          guideState.owner = null;
+          guideState.talking = false;
+        }
+      },
+      { rootMargin: "-10% 0px -10% 0px" },
+    );
+    if (section) io.observe(section);
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    schedule();
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      if (raf) cancelAnimationFrame(raf);
+      if (guideState.owner === "projects") guideState.owner = null;
+    };
+  }, []);
 
-  /* Keyboard: a focused card is brought into view by scrolling the page. */
-  const onFocus = (e: FocusEvent<HTMLUListElement>) => {
-    const root = galleryRef.current;
-    const track = trackRef.current;
-    if (!pinned || !root || !track) return;
-    const card = (e.target as HTMLElement).closest<HTMLElement>(".gallery-card");
-    if (!card) return;
-    const pad = parseFloat(getComputedStyle(track).paddingLeft) || 0;
-    const target = Math.min(dx.get(), Math.max(0, card.offsetLeft - pad));
-    window.scrollTo({ top: root.getBoundingClientRect().top + window.scrollY + target, behavior: "instant" });
-  };
+  const onTypingChange = useCallback((typing: boolean) => {
+    guideState.talking = typing;
+  }, []);
 
   return (
-    <section id="projects" className="ground-ink scroll-mt-16" aria-labelledby="projects-heading">
-      <div ref={galleryRef} className="gallery" data-pinned={pinned ? "" : undefined} style={{ height }}>
-        <div className="gallery-stage pt-[clamp(6.5rem,10vw,9rem)] pb-[clamp(3rem,6vw,5rem)]">
-          <div className="container-x">
+    <section id="projects" ref={sectionRef} className="ground-ink scroll-mt-16 py-[clamp(5rem,9vw,8rem)]" aria-labelledby="projects-heading">
+      <div className="container-x">
+        <div className="lg:grid lg:grid-cols-12 lg:gap-8">
+          {/* Lag's lane: empty on purpose, the 3D guide lives here on wide screens */}
+          <div aria-hidden className="hidden lg:col-span-4 lg:block" />
+
+          <div className="lg:col-span-8">
             <h2 id="projects-heading" className="m-0 text-[clamp(2rem,4vw,3.5rem)] font-semibold leading-[1] tracking-[-0.03em]">
               <span className="mask-line">
                 <Reveal as="span" variant="line">
@@ -344,44 +373,48 @@ export function Projects() {
                 </Reveal>
               </span>
             </h2>
-            <Reveal as="p" variant="rise" delay={80} className="mt-4 max-w-[58ch] text-[clamp(1rem,1.2vw,1.125rem)] leading-[1.5] text-fg-muted">
+            <Reveal as="p" variant="rise" delay={80} className="mt-4 max-w-[52ch] text-[clamp(1rem,1.2vw,1.125rem)] leading-[1.5] text-fg-muted">
               {t(ui.projects.lede)}
             </Reveal>
-          </div>
 
-          <motion.ul
-            ref={trackRef}
-            className="gallery-track mt-[clamp(1.75rem,3.5vw,3rem)]"
-            style={pinned ? { x } : undefined}
-            onFocus={onFocus}
-          >
-            {FEATURED.map((p, i) => (
-              <FeaturedCard key={p.slug} project={p} index={i} />
-            ))}
-          </motion.ul>
+            <div className="thread relative mt-10 max-w-[720px] pl-[72px] lg:pl-10">
+              {/* The thread line, drawn by the scroll */}
+              <svg aria-hidden className="pointer-events-none absolute bottom-0 left-[27px] top-0 h-full w-[2px] overflow-visible lg:left-[11px]" preserveAspectRatio="none" viewBox="0 0 2 100">
+                <line x1="1" y1="0" x2="1" y2="100" stroke="var(--line-strong)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+                <motion.line x1="1" y1="0" x2="1" y2="100" stroke="var(--orchid)" strokeWidth="2" vectorEffect="non-scaling-stroke" style={reduced ? undefined : { pathLength }} pathLength={1} />
+              </svg>
 
-          {!pinned && (
-            <p className="container-x mt-5 flex max-w-none items-center gap-2 text-[0.9375rem] text-fg-muted">
-              <Icon name="arrow-right" size={16} />
-              {t(ui.projects.dragHint)}
+              <ol ref={threadRef} className="m-0 list-none space-y-10 p-0">
+                {entries.map((e, i) => (
+                  <li key={e.key} className="relative" data-active={i === active ? "" : undefined}>
+                    <span aria-hidden className={`thread-dot ${i === active ? "is-on" : ""}`} />
+                    <p className="sr-only">{t(ui.projects.lagName)}</p>
+                    <Bubble
+                      text={e.text}
+                      mode={i === active ? "type" : active > i ? "instant" : "pending"}
+                      active={i === active}
+                      reduced={reduced}
+                      onTypingChange={onTypingChange}
+                      bubbleRef={(el) => {
+                        bubbles.current[i] = el;
+                      }}
+                      face={e.face}
+                      showAvatar
+                    />
+                    {e.project && <Card project={e.project} />}
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            <p className="mt-10 max-w-none">
+              <a href="https://github.com/ducnolag" target="_blank" rel="noopener noreferrer" className="link-arrow text-[1.0625rem]">
+                {t(ui.projects.more)}
+                <Icon name="arrow-up-right" size={18} />
+              </a>
             </p>
-          )}
+          </div>
         </div>
-      </div>
-
-      {/* The other five: a two-column grid of compact posters */}
-      <div className="container-x pb-[clamp(4rem,8vw,7rem)] pt-[clamp(3rem,6vw,5rem)]">
-        <ul className="m-0 grid list-none gap-6 p-0 md:grid-cols-2 md:gap-8">
-          {OTHERS.map((p, i) => (
-            <GridCard key={p.slug} project={p} index={i} />
-          ))}
-        </ul>
-        <p className="mt-10 max-w-none">
-          <a href="https://github.com/ducnolag" target="_blank" rel="noopener noreferrer" className="link-arrow text-[1.0625rem]">
-            {t(ui.projects.more)}
-            <Icon name="arrow-up-right" size={18} />
-          </a>
-        </p>
       </div>
     </section>
   );

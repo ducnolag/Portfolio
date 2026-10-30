@@ -4,6 +4,7 @@ import { useLayoutEffect, type ReactNode } from "react";
 import { LanguageProvider } from "@/lib/i18n";
 import { SmoothScroll } from "./SmoothScroll";
 import { Cursor } from "./Cursor";
+import { LagChat } from "./LagChat";
 
 /** Flags `html.js` so CSS may hold pre-reveal states; without it the page is simply finished. */
 function JsFlag() {
@@ -23,6 +24,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <LanguageProvider>
       <JsFlag />
       <SmoothScroll>{children}</SmoothScroll>
+      <LagChat />
       <Cursor />
     </LanguageProvider>
   );

@@ -98,6 +98,8 @@ export type Project = {
   demoKind?: "live" | "ui-only" | "build";
   /** Role / team context line (from the CV). */
   role?: L;
+  /** What Lag (the robot guide) says about it, in its own voice. 1–2 short sentences. */
+  lagSays: L;
   /** Screenshot cover (1200×750) or undefined → generated cover. */
   cover?: string;
   year: number;
@@ -126,6 +128,10 @@ export const projects: Project[] = [
     },
     stack: ["Next.js", "TypeScript", "Python", "Gemini API", "Docker"],
     category: "ai",
+    lagSays: {
+      en: "Đức's biggest build so far. One roof, many small AI tools, and it runs even without an API key.",
+      vi: "Dự án lớn nhất của Đức tới giờ. Một mái nhà, nhiều tool AI nhỏ, không có API key vẫn chạy.",
+    },
     repo: "https://github.com/ducnolag/ToolifyForEveryone",
     year: 2026,
     featured: true,
@@ -149,6 +155,10 @@ export const projects: Project[] = [
     },
     stack: ["NestJS", "React", "PostgreSQL", "Docker", "NGINX"],
     category: "web",
+    lagSays: {
+      en: "He led four people through a hackathon for this one. The UI is live; the back end is still waiting for a server.",
+      vi: "Vụ này Đức dẫn bốn người qua một kỳ hackathon. Giao diện đã lên, backend còn chờ server.",
+    },
     repo: "https://github.com/ducnolag/SV5T",
     demo: "https://xet-duyet-sv5t.netlify.app/login",
     demoKind: "ui-only",
@@ -176,6 +186,10 @@ export const projects: Project[] = [
     },
     stack: ["React Native", "Expo", "JavaScript", "Speech & LLM APIs"],
     category: "mobile",
+    lagSays: {
+      en: "My favourite. A voice assistant for grandparents, so they can just talk to their phone.",
+      vi: "Mình thích cái này nhất. Trợ lý giọng nói cho ông bà, chỉ cần nói chuyện với điện thoại.",
+    },
     demo: "https://expo.dev/accounts/duclagdz23/projects/voice-assistant-mobile/builds/31cdbd34-cbe2-469c-9891-0d1e1a57cf35",
     demoKind: "build",
     year: 2026,
@@ -200,6 +214,10 @@ export const projects: Project[] = [
     },
     stack: ["C#", ".NET", "SQL Server", "T-SQL"],
     category: "system",
+    lagSays: {
+      en: "Before this, booking a computer lab meant emails and Zalo messages. Now it's one system.",
+      vi: "Trước đó mượn phòng máy là mail với tin nhắn Zalo. Giờ là một hệ thống.",
+    },
     repo: "https://github.com/ducnolag/QL_Phong_May_Thuc_Hanh",
     role: { en: "Team lead · 4 members", vi: "Trưởng nhóm · 4 thành viên" },
     year: 2026,
@@ -224,6 +242,10 @@ export const projects: Project[] = [
     },
     stack: ["Python", "pandas", "Plotly", "HTML"],
     category: "data",
+    lagSays: {
+      en: "This one won first place. Data in, decisions out, and a jury that nodded.",
+      vi: "Cái này giành giải nhất. Dữ liệu vào, quyết định ra, giám khảo gật đầu.",
+    },
     repo: "https://github.com/ducnolag/Data_To_Decision_Making",
     year: 2026,
     featured: false,
@@ -247,6 +269,10 @@ export const projects: Project[] = [
     },
     stack: ["TypeScript", "Vercel"],
     category: "web",
+    lagSays: {
+      en: "Four stages, monsters that ask questions, a boss you beat with code. Thirty-five minutes on the clock.",
+      vi: "Bốn ải, quái hỏi câu hỏi, boss hạ bằng code. Đồng hồ ba mươi lăm phút.",
+    },
     demo: "https://bit-minigametest.vercel.app/",
     demoKind: "live",
     cover: "/images/projects/minigame.jpg",
@@ -272,6 +298,10 @@ export const projects: Project[] = [
     },
     stack: ["JavaScript", "Netlify"],
     category: "web",
+    lagSays: {
+      en: "Write once, send to everyone, each name filled in. Small tool, saves whole evenings.",
+      vi: "Viết một lần, gửi cho tất cả, tên ai điền nấy. Tool nhỏ, tiết kiệm cả buổi tối.",
+    },
     demo: "https://sendmailmanypeople.netlify.app/",
     demoKind: "live",
     year: 2026,
@@ -296,6 +326,10 @@ export const projects: Project[] = [
     },
     stack: ["JavaScript", "HTML", "CSS"],
     category: "web",
+    lagSays: {
+      en: "The first one. A noodle-shop storefront in plain JavaScript, cart and all.",
+      vi: "Cái đầu tiên. Trang bán mì bằng JavaScript thuần, có cả giỏ hàng.",
+    },
     repo: "https://github.com/ducnolag/Websitez-Buy_Noodles-FE",
     demo: "https://tiem-an-vat-ngon-nhat-the-gioi.netlify.app/",
     demoKind: "live",
@@ -457,11 +491,35 @@ export const ui = {
       vi: ["Sống tại Hà Nội", "BA × AI × Full-stack", "Sẵn sàng thực tập & hợp tác"],
     } as L<string[]>,
   },
+  marquee: {
+    en: "Ideas → products · Business Analyst · AI Engineer · Full-stack · ",
+    vi: "Ý tưởng → sản phẩm · Business Analyst · AI Engineer · Full-stack · ",
+  } as L,
+  skills: {
+    heading: { en: "Skills", vi: "Kỹ năng" },
+    lede: {
+      en: "The short version. The long one is in the CV.",
+      vi: "Bản ngắn. Bản đầy đủ nằm trong CV.",
+    },
+    downloadCv: { en: "Download CV (PDF)", vi: "Tải CV (PDF)" },
+    lagSays: {
+      en: "Business analyst first, builder second. Ask me about any of these.",
+      vi: "Business analyst trước, builder sau. Hỏi mình về mục nào cũng được.",
+    },
+  },
   projects: {
     heading: { en: "Selected work", vi: "Dự án tiêu biểu" },
     lede: {
-      en: "Eight things I built or led. Live ones open in a new tab; private ones show their build instead of the code.",
-      vi: "Tám sản phẩm mình đã làm hoặc dẫn dắt. Cái nào đang chạy thì mở tab mới; cái để riêng tư thì xem bản build thay vì mã.",
+      en: "Lag will walk you through them. Eight things I built or led.",
+      vi: "Lag sẽ dẫn bạn đi một vòng. Tám sản phẩm mình đã làm hoặc dẫn dắt.",
+    },
+    intro: {
+      en: "Okay, this is the part I like. Let me show you what he actually built.",
+      vi: "Rồi, đến phần mình thích. Để mình cho bạn xem Đức đã dựng gì.",
+    },
+    outro: {
+      en: "That's the tour. Ask me anything about these, or scroll on.",
+      vi: "Hết tour rồi. Hỏi mình gì về mấy cái này cũng được, hoặc cuộn tiếp.",
     },
     viewRepo: { en: "Source on GitHub", vi: "Mã nguồn trên GitHub" },
     viewDemo: { en: "Open live site", vi: "Mở trang web" },
@@ -480,20 +538,27 @@ export const ui = {
     more: { en: "More on GitHub", vi: "Xem thêm trên GitHub" },
     dragHint: { en: "Drag sideways", vi: "Kéo ngang" },
     coverAlt: { en: "Screenshot of", vi: "Ảnh chụp màn hình" },
+    lagName: { en: "Lag", vi: "Lag" },
   },
-  marquee: {
-    en: "Ideas → products · Business Analyst · AI Engineer · Full-stack · ",
-    vi: "Ý tưởng → sản phẩm · Business Analyst · AI Engineer · Full-stack · ",
-  } as L,
-  skills: {
-    heading: { en: "What I bring", vi: "Kỹ năng & hồ sơ" },
-    education: { en: "Education", vi: "Học vấn" },
-    gpa: { en: "GPA", vi: "GPA" },
-    experience: { en: "Experience", vi: "Kinh nghiệm" },
-    skills: { en: "Skills", vi: "Kỹ năng" },
-    certificates: { en: "Certificates", vi: "Chứng chỉ" },
-    awards: { en: "Honours & awards", vi: "Danh hiệu & giải thưởng" },
-    downloadCv: { en: "Download CV (PDF)", vi: "Tải CV (PDF)" },
+  chat: {
+    open: { en: "Ask Lag", vi: "Hỏi Lag" },
+    close: { en: "Close chat", vi: "Đóng chat" },
+    title: { en: "Lag · Đức's build companion", vi: "Lag · bạn đồng hành của Đức" },
+    placeholder: { en: "Ask about Đức, a project, or how to reach him…", vi: "Hỏi về Đức, một dự án, hay cách liên hệ…" },
+    send: { en: "Send", vi: "Gửi" },
+    greeting: {
+      en: "Hi, I'm Lag. I know everything on this page. What do you want to know about Đức?",
+      vi: "Chào, mình là Lag. Mình biết mọi thứ trên trang này. Bạn muốn biết gì về Đức?",
+    },
+    suggestions: {
+      en: ["Who is Đức?", "What can he do as a BA?", "Tell me about SV5T", "How do I contact him?"],
+      vi: ["Đức là ai?", "Đức làm được gì ở vai trò BA?", "Kể về SV5T đi", "Liên hệ Đức kiểu gì?"],
+    } as L<string[]>,
+    unknown: {
+      en: "Hmm, that one's outside my screen. Try a project name, his skills, or how to reach him.",
+      vi: "Ừm, cái đó nằm ngoài màn hình của mình. Thử hỏi tên dự án, kỹ năng, hoặc cách liên hệ nhé.",
+    },
+    thinking: { en: "Lag is thinking…", vi: "Lag đang nghĩ…" },
   },
   contact: {
     heading: { en: "Let's build something", vi: "Cùng làm gì đó nhé" },

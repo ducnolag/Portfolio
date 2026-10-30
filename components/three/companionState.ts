@@ -14,6 +14,10 @@ export type CompanionState = {
   /** Floor contact point in backdrop units (x / viewportHeight, y / viewportHeight), for the stage light. */
   spotX: number;
   spotY: number;
+  /** Strength of the stage light under it (1 in the companion scene, dimmer while guiding). */
+  spotGain: number;
+  /** True while Lag has left the companion scene and follows the page as the guide. */
+  guided: boolean;
 };
 
 export const companionState: CompanionState = {
@@ -23,4 +27,6 @@ export const companionState: CompanionState = {
   active: false,
   spotX: 0.3,
   spotY: -0.3,
+  spotGain: 0,
+  guided: false,
 };

@@ -16,11 +16,16 @@ import {
   type WebGLRenderer,
 } from "three";
 import type { RootState } from "@react-three/fiber";
+import { guideState, type GuideState } from "@/lib/guide";
 
 declare global {
   interface Window {
     /** Dev-only handle for inspecting renderer.info from automation. */
     __world?: RootState;
+    /** Dev-only handle so automation can drive the guide state. */
+    __guide?: GuideState;
+    /** Dev-only handle for the overlay canvas that carries Lag. */
+    __guideWorld?: RootState;
   }
 }
 import { useDeviceTier } from "@/lib/hooks";
@@ -124,6 +129,48 @@ function Effects() {
   );
 }
 
+/**
+ * A second, transparent canvas ABOVE the page for "Lag": the sections it
+ * guides (projects, skills, contact) have opaque grounds, so a robot drawn in
+ * the world canvas behind `main` could never sit beside their text. Same
+ * camera, same scale helpers, so positions line up with the world canvas;
+ * no post-processing (it would fill the transparent background).
+ */
+export function GuideCanvas() {
+  const hidden = useSyncExternalStore(subscribeVisibility, readHidden, serverHidden);
+  const [eventSource] = useState<HTMLElement | null>(() =>
+    typeof document === "undefined" ? null : document.body,
+  );
+  if (!eventSource) return null;
+  return (
+    <Canvas
+      style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+      camera={{ fov: CAMERA_FOV, position: [0, 0, CAMERA_Z], near: 0.5, far: 60 }}
+      scene={{ environmentIntensity: 0.28 }}
+      dpr={[1, 1.5]}
+      flat
+      gl={{
+        antialias: false,
+        alpha: true,
+        premultipliedAlpha: true,
+        stencil: false,
+        powerPreference: "high-performance",
+      }}
+      frameloop={hidden ? "never" : "always"}
+      eventSource={eventSource}
+      eventPrefix="client"
+      onCreated={(state) => {
+        state.gl.setClearColor("#000000", 0);
+        if (process.env.NODE_ENV !== "production") window.__guideWorld = state;
+      }}
+    >
+      <Environment />
+      <Lights />
+      <Companion />
+    </Canvas>
+  );
+}
+
 export function WorldCanvas() {
   const tier = useDeviceTier();
   const hidden = useSyncExternalStore(subscribeVisibility, readHidden, serverHidden);
@@ -153,7 +200,10 @@ export function WorldCanvas() {
       eventPrefix="client"
       onCreated={(state) => {
         state.gl.setClearColor("#07060d", 1);
-        if (process.env.NODE_ENV !== "production") window.__world = state;
+        if (process.env.NODE_ENV !== "production") {
+          window.__world = state;
+          window.__guide = guideState;
+        }
       }}
     >
       <ScrollMirror />
@@ -163,7 +213,6 @@ export function WorldCanvas() {
       <NeonRing />
       <TechGlyphs />
       <Lanyard />
-      <Companion />
       <PortraitParticles />
       {tier === 2 ? <Effects /> : null}
     </Canvas>

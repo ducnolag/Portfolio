@@ -277,9 +277,8 @@ export function Backdrop() {
     u.uLift.value = lerp(a[4], b[4], f);
     u.uTint.value = lerp(a[5], b[5], f);
     // the stage light lives in chapter 1 only, under the companion's feet
-    const spotW = Math.max(0, 1 - Math.abs(s.chapter - 1)) * (companionState.active ? 1 : 0);
     (u.uSpot.value as Vector2).set(companionState.spotX, companionState.spotY);
-    u.uSpotGain.value = spotW;
+    u.uSpotGain.value = companionState.active ? companionState.spotGain : 0;
 
     u.uTime.value = state.clock.elapsedTime;
     u.uAspect.value = state.size.width / Math.max(1, state.size.height);

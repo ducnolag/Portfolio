@@ -2,7 +2,7 @@
 
 import { createElement, useEffect, useRef, type CSSProperties, type ReactNode, type RefObject } from "react";
 
-export type RevealVariant = "rise" | "fade" | "line" | "mask" | "settle";
+export type RevealVariant = "rise" | "fade" | "line" | "mask" | "settle" | "pop" | "slide";
 
 /**
  * Marks an element as revealed once it enters the viewport (top 12% in).

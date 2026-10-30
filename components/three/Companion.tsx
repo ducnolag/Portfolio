@@ -27,10 +27,11 @@ import {
   Vector3,
 } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { useDeviceTier, useReducedMotion } from "@/lib/hooks";
+import { useReducedMotion } from "@/lib/hooks";
 import { heldProgress, scrollState } from "@/lib/scroll";
+import { guideState, type GuideFace } from "@/lib/guide";
 import { companionState } from "./companionState";
-import { stickyStageTop, visibleHeightAtZ, worldPerPixel } from "./worldScale";
+import { stickyStageTop, viewportToWorld, visibleHeightAtZ, worldPerPixel } from "./worldScale";
 
 /* ─────────────────────────────────────────────────────────────
    "Lag", the build companion: a glossy TV-headed robot with an LED-matrix
@@ -714,11 +715,24 @@ type Live = {
   speed: number;
   headPx: Vector3;
   ballColor: Color;
+  /* the guide: a critically damped spring on the head's world position, a size lerp, a fade */
+  wx: number;
+  wy: number;
+  vx: number;
+  vy: number;
+  size: number;
+  fade: number;
+  seenHop: number;
+  guideFace: GuideFace | null;
+  projects: Element | null;
+  nextQuery: number;
 };
+const GUIDE_OMEGA = Math.PI * 2 * 0.9;
+/** Gap between the head's near edge and the anchor it sits beside, in px. */
+const STANDOFF = 40;
 
 export function Companion() {
   const reduced = useReducedMotion();
-  const tier = useDeviceTier();
   const rootRef = useRef<Group>(null);
   const rigRef = useRef<Group>(null); // glide position
   const headRef = useRef<Group>(null); // pose (squash about the bottom)
@@ -743,6 +757,16 @@ export function Companion() {
     speed: 0,
     headPx: new Vector3(),
     ballColor: new Color(),
+    wx: 0,
+    wy: 0,
+    vx: 0,
+    vy: 0,
+    size: 1,
+    fade: 0,
+    seenHop: 0,
+    guideFace: null,
+    projects: null,
+    nextQuery: 0,
   });
 
   const geo = useMemo(() => {
@@ -884,43 +908,123 @@ export function Companion() {
     const vh = window.innerHeight || 1;
     const vw = window.innerWidth || 1;
     const rect = section.getBoundingClientRect();
-    const near = rect.bottom > -vh && rect.top < vh * 2;
-    root.visible = near;
-    companionState.active = near;
-    if (!near) return;
-
+    const sceneNear = rect.bottom > -vh && rect.top < vh * 2;
+    /* after the scene it waits in the corner only while the stage is still mostly on screen */
+    const sceneLingers = rect.bottom > vh * 0.5 && rect.top < vh * 2;
     const wpp = worldPerPixel(vh);
     const viewH = visibleHeightAtZ(0);
     const aspect = state.size.width / Math.max(1, state.size.height);
     const viewW = viewH * aspect;
     const portrait = aspect < 0.9;
+    const now = state.clock.elapsedTime;
 
-    /* size + placement: head width 26 % of the viewport (cap 420 px), lower-right third; portrait 55 %, upper half */
-    const scale = portrait ? 0.55 * viewW : Math.min(0.26 * viewW, 420 * wpp);
+    /* where are we: the companion scene, docked beside a section's anchor, a gap between owners, or away */
+    const p = reduced ? 0.5 : heldProgress(section);
+    const owner = guideState.owner;
+    const anchor = guideState.anchor;
+    if (now > s.nextQuery && !s.projects) {
+      s.nextQuery = now + 0.5;
+      s.projects = document.getElementById("projects");
+    }
+    const afterProjects = !!s.projects && s.projects.isConnected && s.projects.getBoundingClientRect().top < vh * 0.6;
+    const scene = sceneNear && (owner === null || p < 0.92) && p < 0.92;
+    const docked = !scene && !portrait && owner !== null && anchor !== null;
+    const gap = !scene && !docked && !portrait && (sceneLingers || afterProjects);
+    const visible = scene || docked || gap;
+
+    /* fade (300 ms) by scale; fully hidden stops rendering */
+    s.fade += ((visible ? 1 : 0) - s.fade) * Math.min(1, dt / 0.3);
+    if (!visible && s.fade < 0.02) s.fade = 0;
+    root.visible = s.fade > 0.01;
+    companionState.active = root.visible;
+    companionState.guided = docked || gap;
+    if (!root.visible) {
+      companionState.spotGain = 0;
+      return;
+    }
+
+    /* size: companion scene 26 % of the viewport (cap 420 px; portrait 55 %), guiding 14 % (cap 200 px) */
+    const sceneScale = portrait ? 0.55 * viewW : Math.min(0.26 * viewW, 420 * wpp);
+    let guideScale = Math.min(0.14 * viewW, 200 * wpp);
+    if (docked && anchor) {
+      /* the lane beside / above the anchor: shrink to fit it (never under 96 px) so Lag never touches the text */
+      let fitPx: number;
+      if (anchor.side === "left") fitPx = anchor.x - 16 - STANDOFF;
+      else if (anchor.side === "right") fitPx = vw - 16 - (anchor.x + anchor.width) - STANDOFF;
+      else fitPx = (anchor.y - 72 - STANDOFF) / 1.3; // head + antenna ≈ 1.3 × its width
+      guideScale = Math.min(guideScale, Math.max(96, fitPx) * wpp);
+    }
+    const wantSize = scene ? sceneScale : guideScale;
+    s.size = s.size === 1 && s.fade < 0.05 ? wantSize : s.size + (wantSize - s.size) * (1 - Math.exp(-dt * 4));
+    const scale = s.size;
+    const headWidthPx = scale / wpp;
+
+    /* the target head centre in camera-fixed world units (z = 0 plane) */
     const stageTop = stickyStageTop(rect.top, rect.bottom, vh);
     const stageOffset = (vh / 2 - (stageTop + vh / 2)) * wpp;
-    const restX = portrait ? 0 : 0.3 * viewW;
-    const restY = portrait ? 0.18 * viewH : -0.1 * viewH; // head centre at rest
-    root.position.set(0, stageOffset, 0);
-    root.scale.setScalar(scale);
-
-    /* scroll script → state */
-    const p = reduced ? 0.5 : heldProgress(section);
     companionState.progress = p;
     const phase: 0 | 1 | 2 = p < 0.33 ? 0 : p < 0.66 ? 1 : 2;
     companionState.phase = phase;
-    const glideIn = reduced ? 1 : smooth(0.0, 0.28, p);
-    const glideOut = reduced ? 0 : smooth(0.7, 0.9, p);
-    const offRight = viewW / 2 + scale * 0.8;
-    const offLeft = -viewW / 2 - scale * 0.8;
-    const gx = restX + (offRight - restX) * (1 - glideIn) + (offLeft - restX) * glideOut;
-    const gy = restY - glideOut * 0.12 * viewH;
+    let tx = 0, ty = 0;
+    if (scene) {
+      const restX = portrait ? 0 : 0.3 * viewW;
+      const restY = portrait ? 0.18 * viewH : -0.1 * viewH;
+      const glideIn = reduced ? 1 : smooth(0.0, 0.28, p);
+      const offRight = viewW / 2 + scale * 0.8;
+      tx = restX + (offRight - restX) * (1 - glideIn);
+      ty = restY + stageOffset;
+    } else if (docked && anchor) {
+      /* the head's near edge stays STANDOFF px clear of the anchor; the head stays 16 px inside the viewport */
+      const half = headWidthPx / 2;
+      let px = anchor.x + anchor.width / 2, py = anchor.y + anchor.height / 2;
+      if (anchor.side === "left") px = anchor.x - STANDOFF - half;
+      else if (anchor.side === "right") px = anchor.x + anchor.width + STANDOFF + half;
+      else py = anchor.y - STANDOFF - headWidthPx * 0.4; // head bottom STANDOFF above the anchor
+      px = clamp(px, 16 + half, vw - 16 - half);
+      py = clamp(py, 72 + headWidthPx * 0.9, vh - headWidthPx * 0.55);
+      const w = viewportToWorld(px, py, vw, vh);
+      tx = w.x;
+      ty = w.y;
+    } else {
+      /* a gap between owners: wait in the lower-right corner, off the text */
+      const w = viewportToWorld(vw - headWidthPx * 0.9, vh - headWidthPx * 0.95, vw, vh);
+      tx = w.x;
+      ty = w.y;
+    }
+    if (scene || s.fade < 0.05) {
+      /* the scene's entrance is authored; the spring starts from wherever it ends */
+      s.wx = tx;
+      s.wy = ty;
+      s.vx = 0;
+      s.vy = 0;
+    } else {
+      const steps = Math.max(1, Math.ceil(dt / (1 / 60)));
+      const h = Math.min(dt, 0.1) / steps;
+      for (let i = 0; i < steps; i++) {
+        s.vx += (GUIDE_OMEGA * GUIDE_OMEGA * (tx - s.wx) - 2 * GUIDE_OMEGA * s.vx) * h;
+        s.vy += (GUIDE_OMEGA * GUIDE_OMEGA * (ty - s.wy) - 2 * GUIDE_OMEGA * s.vy) * h;
+        s.wx += s.vx * h;
+        s.wy += s.vy * h;
+      }
+    }
+    const gx = s.wx, gy = s.wy;
+    const pop = s.fade * s.fade * (3 - 2 * s.fade);
+    root.position.set(0, 0, 0);
+    root.scale.setScalar(scale * (0.7 + 0.3 * pop));
     rig.position.set(gx / scale, gy / scale, 0);
 
-    const wanted: RobotState = reduced ? "idle" : phase === 0 ? "idle" : phase === 1 ? "thinking" : "happy";
+    /* which state: the scene's script, or what the owning section asks for */
+    let wanted: RobotState;
+    if (scene) wanted = reduced ? "idle" : phase === 0 ? "idle" : phase === 1 ? "thinking" : "happy";
+    else if (docked) wanted = guideState.chatOpen ? "listening" : guideState.talking ? "speaking" : guideState.face;
+    else wanted = "idle";
     if (wanted !== s.scrollState) {
       s.scrollState = wanted;
       s.sim.setState(wanted);
+    }
+    if (guideState.hopRequest !== s.seenHop) {
+      if (s.fade > 0.5 && !scene) s.sim.hop(0.16, 0);
+      s.seenHop = guideState.hopRequest;
     }
     /* a scroll-speed spike: it searches for a beat (own estimate: scrollState.velocity
        only updates on scroll events, so it would hold its last value after a jump) */
@@ -929,18 +1033,18 @@ export function Companion() {
     const inst = Math.min(6000, Math.abs(dy) / Math.max(1 / 240, dt));
     s.speed += (inst - s.speed) * (1 - Math.exp(-dt * 6));
     const fast = s.speed > 2400 && Math.abs(dy) > 0;
-    const now = state.clock.elapsedTime;
-    if (fast && !reduced && now > s.searchUntil) {
+    if (fast && !reduced && now > s.searchUntil && scene) {
       s.searchUntil = now + 0.9;
       s.sim.react(0.9);
     }
 
     /* pointer relative to the head centre, in robot-heads' px scale (160 px per head width) */
-    s.headPx.set(gx, gy + stageOffset, 0).project(state.camera);
+    s.headPx.set(gx, gy, 0).project(state.camera);
     const hx = ((s.headPx.x + 1) / 2) * vw;
     const hy = ((1 - s.headPx.y) / 2) * vh;
-    const headWidthPx = scale / wpp;
-    s.sim.pointer = { x: ((s.tx - hx) / headWidthPx) * 160, y: ((s.ty - hy) / headWidthPx) * 160 };
+    const lookX = docked && guideState.chatOpen ? vw - 40 : s.tx;
+    const lookY = docked && guideState.chatOpen ? vh - 40 : s.ty;
+    s.sim.pointer = { x: ((lookX - hx) / headWidthPx) * 160, y: ((lookY - hy) / headWidthPx) * 160 };
 
     /* simulate */
     const sim = s.sim;
@@ -1021,14 +1125,15 @@ export function Companion() {
     const shadow = shadowRef.current, shm = shadowMatRef.current;
     if (shadow && shm) {
       const up = Math.max(0, ps.lift);
-      shadow.position.set(rig.position.x + ps.x, rig.position.y - HY - 0.11, 0.1);
+      shadow.position.set(ps.x, -HY - 0.11, 0.1); // rig-local: under the head
       shadow.scale.set(2 * HX * (1 - up * 0.9) * ps.sx, 0.26 * (1 - up * 0.9), 1);
-      shm.opacity = Math.max(0, 1 - up * 1.6) * (1 - glideOut);
+      shm.opacity = Math.max(0, 1 - up * 1.6) * pop * (scene ? 1 : 0.55);
     }
 
-    /* the stage light under it */
+    /* the stage light under it: full in the scene, dim while guiding projects / skills, off elsewhere */
     companionState.spotX = gx / viewH;
     companionState.spotY = (gy - HY * scale - 0.11 * scale) / viewH;
+    companionState.spotGain = pop * (scene ? 1 : docked && (owner === "projects" || owner === "skills") ? 0.4 : gap ? 0.25 : 0);
   });
 
   return (
@@ -1071,11 +1176,9 @@ export function Companion() {
               <mesh geometry={geo.ball} position={[0, STEM + BALL * 0.8, 0]}>
                 <meshStandardMaterial ref={ballMatRef} color="#c084fc" emissive="#c084fc" roughness={0.35} metalness={0} toneMapped={false} />
               </mesh>
-              {tier < 2 ? (
-                <sprite ref={haloRef} position={[0, STEM + BALL * 0.8, 0]}>
-                  <spriteMaterial ref={haloMatRef} transparent depthWrite={false} blending={AdditiveBlending} toneMapped={false} opacity={0.6} />
-                </sprite>
-              ) : null}
+              <sprite ref={haloRef} position={[0, STEM + BALL * 0.8, 0]}>
+                <spriteMaterial ref={haloMatRef} transparent depthWrite={false} blending={AdditiveBlending} toneMapped={false} opacity={0.6} />
+              </sprite>
             </group>
           </group>
         </group>

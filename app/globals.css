@@ -245,6 +245,8 @@ html.js[data-motion="full"] [data-reveal="line"]:not([data-in]) > * { transform:
 html.js[data-motion="full"] [data-reveal="mask"]:not([data-in]) { opacity: 1; }
 html.js[data-motion="full"] [data-reveal="mask"]:not([data-in]) > * { clip-path: inset(0 0 100% 0); }
 html.js[data-motion="full"] [data-reveal="settle"]:not([data-in]) { opacity: 1; transform: scale(1.08); }
+html.js[data-motion="full"] [data-reveal="pop"]:not([data-in]) { transform: translateY(16px) scale(0.96); }
+html.js[data-motion="full"] [data-reveal="slide"]:not([data-in]) { transform: translateX(-16px); }
 /* One reveal timing for the whole page: 700ms --ease-out, staggered through --d (80ms steps) */
 [data-reveal][data-in] {
   transition:
@@ -254,6 +256,7 @@ html.js[data-motion="full"] [data-reveal="settle"]:not([data-in]) { opacity: 1; 
 [data-reveal="line"][data-in] > * { transition: transform 700ms var(--ease-out) var(--d, 0ms); }
 [data-reveal="mask"][data-in] > * { transition: clip-path 700ms var(--ease-out) var(--d, 0ms); }
 [data-reveal="settle"][data-in] { transition: transform 700ms var(--ease-out) var(--d, 0ms); }
+[data-reveal="pop"][data-in] { transition: opacity 420ms var(--ease-out) var(--d, 0ms), transform 420ms var(--ease-out) var(--d, 0ms); }
 
 /* ─── Custom cursor (fine pointers only; orchid ring, neon dot) ─ */
 html[data-custom-cursor], html[data-custom-cursor] * { cursor: none !important; }
@@ -410,6 +413,89 @@ html[data-motion="full"] .marquee[data-paused] .marquee-track { animation-play-s
   display: inline-flex; align-items: center; height: 1.75rem; padding-inline: 0.7rem; border-radius: 999px;
   border: 1px solid var(--line-strong); font-size: 0.8125rem; font-weight: 500; color: var(--fg-muted); white-space: nowrap;
 }
+
+/* ─── Lag's dialogue: bubbles, thread, cards ─────────────────── */
+.bubble {
+  position: relative; display: block; width: fit-content; max-width: 100%;
+  padding: 0.95rem 1.2rem; border-radius: 18px; background: var(--ink-3);
+}
+.bubble::before {
+  content: ""; position: absolute; top: 18px; left: -8px; width: 16px; height: 16px;
+  background: var(--ink-3); border-radius: 3px; transform: rotate(45deg);
+}
+.bubble-right::before { left: auto; right: -8px; }
+/* Upcoming bubbles keep their full text (SSR / no-JS); while motion is on they wait, dimmed to 45%, until Lag speaks them */
+html.js[data-motion="full"] .bubble-text[data-typing="pending"] { opacity: 0.45; }
+.bubble-text { transition: opacity 300ms ease; }
+.caret {
+  display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -0.15em;
+  background: var(--orchid); animation: caret-blink 1s steps(1, end) infinite;
+}
+@keyframes caret-blink { 50% { opacity: 0; } }
+.thread-dot {
+  position: absolute; top: 24px; left: -51px; width: 10px; height: 10px; border-radius: 999px;
+  background: var(--ink); border: 2px solid var(--line-strong);
+  transition: border-color 300ms ease, background-color 300ms ease, box-shadow 300ms ease;
+}
+.thread-dot.is-on { border-color: var(--orchid); background: var(--orchid); box-shadow: 0 0 0 4px color-mix(in oklab, var(--orchid) 25%, transparent); }
+@media (min-width: 1024px) { .thread-dot { left: -35px; } }
+.thread-avatar {
+  position: absolute; top: -4px; left: -72px; width: 56px; height: 56px;
+  opacity: 0.35; transition: opacity 300ms ease, transform 420ms var(--ease-out);
+}
+.thread-avatar.is-on { opacity: 1; transform: translateY(2px); }
+@media (min-width: 1024px) { .thread-avatar { display: none; } }
+.tcard { transition: transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out); }
+.tcard-edge { opacity: 0.55; transition: opacity 200ms ease, box-shadow 200ms ease; }
+@media (hover: hover) and (pointer: fine) {
+  .tcard:hover { transform: translateY(-2px); box-shadow: 0 18px 40px -22px color-mix(in oklab, var(--neon) 50%, transparent); }
+  .tcard:hover .tcard-edge { opacity: 1; box-shadow: 4px 0 18px -4px color-mix(in oklab, var(--accent) 70%, transparent); }
+}
+
+/* ─── Chat with Lag ──────────────────────────────────────────── */
+.chat-fab {
+  position: fixed; right: max(1rem, env(safe-area-inset-right)); bottom: max(1rem, env(safe-area-inset-bottom)); z-index: 70;
+  display: inline-flex; align-items: center; gap: 0.5rem; height: 56px; min-width: 56px; padding: 0 8px; border-radius: 999px;
+  background: var(--ink-3); border: 1px solid var(--line-strong); color: var(--fg);
+  box-shadow: 0 16px 40px -18px color-mix(in oklab, var(--neon) 60%, transparent);
+  transition: border-color 200ms ease, transform 140ms var(--ease-out), box-shadow 200ms ease;
+}
+.chat-fab:hover { border-color: var(--orchid); }
+.chat-fab:active { transform: scale(0.96); }
+.chat-fab-label { max-width: 0; overflow: hidden; white-space: nowrap; font-size: 0.875rem; font-weight: 600; transition: max-width 300ms var(--ease-out), padding 300ms var(--ease-out); }
+.chat-fab:hover .chat-fab-label, .chat-fab:focus-visible .chat-fab-label { max-width: 8rem; padding-right: 0.5rem; }
+.chat-panel {
+  position: fixed; right: max(1rem, env(safe-area-inset-right)); bottom: calc(max(1rem, env(safe-area-inset-bottom)) + 68px); z-index: 70;
+  display: flex; flex-direction: column; width: 360px; height: min(520px, calc(100svh - 7rem));
+  background: var(--ink-2); border: 1px solid var(--line-strong); border-radius: 20px; overflow: clip;
+  box-shadow: 0 30px 80px -30px color-mix(in oklab, var(--neon) 55%, transparent);
+}
+html.js[data-motion="full"] .chat-panel { animation: chat-in 320ms var(--ease-out) both; }
+@keyframes chat-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } }
+@media (max-width: 639px) {
+  .chat-panel { left: 0; right: 0; bottom: 0; width: auto; height: min(78svh, 560px); border-radius: 20px 20px 0 0; border-bottom: 0; }
+  .chat-fab[aria-expanded="true"] { display: none; }
+}
+.chat-head { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0.75rem 0.75rem 1rem; border-bottom: 1px solid var(--line); background: var(--ink-3); }
+.chat-list { flex: 1; margin: 0; padding: 1rem; list-style: none; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; overscroll-behavior: contain; }
+.chat-msg { max-width: 88%; padding: 0.65rem 0.85rem; border-radius: 14px; }
+.chat-msg-lag { align-self: flex-start; background: var(--ink-3); border-bottom-left-radius: 4px; }
+.chat-msg-you { align-self: flex-end; background: var(--violet); color: var(--accent-ink); border-bottom-right-radius: 4px; }
+.chip {
+  display: inline-flex; align-items: center; height: 1.9rem; padding-inline: 0.75rem; border-radius: 999px;
+  border: 1px solid var(--line-strong); font-size: 0.8125rem; font-weight: 500; color: var(--fg); background: transparent;
+  transition: border-color 200ms ease, color 200ms ease, transform 140ms var(--ease-out);
+}
+.chip:hover { border-color: var(--orchid); color: var(--orchid); }
+.chip:active { transform: scale(0.96); }
+.chat-form { display: flex; gap: 0.5rem; padding: 0.75rem; border-top: 1px solid var(--line); background: var(--ink-2); }
+.chat-input {
+  flex: 1; min-width: 0; height: 2.5rem; padding: 0 0.9rem; border-radius: 999px;
+  background: var(--ink-3); border: 1px solid var(--line); color: var(--fg); font: inherit; font-size: 0.9375rem;
+}
+.chat-input::placeholder { color: var(--fg-muted); }
+.chat-input:focus-visible { outline: 2px solid var(--orchid); outline-offset: 1px; border-color: transparent; }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
 
 /* ─── Curtain footer: fixed sheet revealed through a clipped box ─ */
 .curtain { position: relative; clip-path: inset(0); }

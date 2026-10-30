@@ -10,6 +10,9 @@ import dynamic from "next/dynamic";
 const WorldCanvas = dynamic(() => import("./WorldCanvas").then((m) => m.WorldCanvas), {
   ssr: false,
 });
+const GuideCanvas = dynamic(() => import("./WorldCanvas").then((m) => m.GuideCanvas), {
+  ssr: false,
+});
 
 export function WorldFallback() {
   return (
@@ -28,13 +31,24 @@ export function WorldFallback() {
 
 export function World() {
   return (
-    <div
-      aria-hidden="true"
-      data-world
-      style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}
-    >
-      <WorldFallback />
-      <WorldCanvas />
-    </div>
+    <>
+      <div
+        aria-hidden="true"
+        data-world
+        style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}
+      >
+        <WorldFallback />
+        <WorldCanvas />
+      </div>
+      {/* Lag rides above the page (its sections have opaque grounds); a sibling of the
+          world so its z-index counts against `main`; still pointer-transparent */}
+      <div
+        aria-hidden="true"
+        data-guide
+        style={{ position: "fixed", inset: 0, zIndex: 15, pointerEvents: "none" }}
+      >
+        <GuideCanvas />
+      </div>
+    </>
   );
 }

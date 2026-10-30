@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { profile, ui } from "@/lib/content";
 import { useLang } from "@/lib/i18n";
+import { guideState, setGuideAnchor } from "@/lib/guide";
 import { Icon } from "@/components/ui/Icon";
 import { Reveal } from "@/components/ui/Reveal";
 
@@ -15,8 +16,49 @@ export function Contact() {
   const { t } = useLang();
   const [copied, setCopied] = useState(false);
   const timer = useRef(0);
+  const sectionRef = useRef<HTMLElement>(null);
+  const headRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  /* Lag docks to the right of the headline block while the chapter is on screen */
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    let on = false;
+    let raf = 0;
+    const place = () => {
+      raf = 0;
+      if (on) setGuideAnchor(headRef.current, "right");
+    };
+    const schedule = () => {
+      if (!raf) raf = requestAnimationFrame(place);
+    };
+    const io = new IntersectionObserver(
+      ([e]) => {
+        on = e.isIntersecting;
+        if (on) {
+          guideState.owner = "contact";
+          guideState.face = "happy";
+          guideState.talking = false;
+          schedule();
+        } else if (guideState.owner === "contact") {
+          guideState.owner = null;
+        }
+      },
+      { rootMargin: "-20% 0px -20% 0px" },
+    );
+    io.observe(section);
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      if (raf) cancelAnimationFrame(raf);
+      if (guideState.owner === "contact") guideState.owner = null;
+    };
+  }, []);
 
   const copy = async () => {
     try {
@@ -36,11 +78,12 @@ export function Contact() {
   return (
     <section
       id="contact"
+      ref={sectionRef}
       className="ground-ink-3 flex min-h-[100svh] scroll-mt-16 items-center py-[clamp(6rem,14vh,10rem)]"
       aria-labelledby="contact-heading"
     >
       <div className="container-x grid gap-12 lg:grid-cols-12 lg:gap-10">
-        <div className="lg:col-span-8">
+        <div ref={headRef} className="lg:col-span-8">
           <h2
             id="contact-heading"
             className="m-0 max-w-[12ch] text-[clamp(2.75rem,7vw,6rem)] font-bold leading-[0.95] tracking-[-0.035em]"
