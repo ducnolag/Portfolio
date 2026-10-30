@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { profile, ui } from "@/lib/content";
-import { useLang } from "@/lib/i18n";
+import { profile } from "@/lib/content";
 import { Icon } from "@/components/ui/Icon";
 import { LangToggle } from "@/components/ui/LangToggle";
 import { MotionToggle } from "@/components/ui/MotionToggle";
@@ -15,7 +14,6 @@ import { MotionToggle } from "@/components/ui/MotionToggle";
  * portrait sections where the WebGL world shows through.
  */
 export function Footer() {
-  const { t } = useLang();
   const sheetRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState<number | undefined>(undefined);
 
@@ -28,8 +26,6 @@ export function Footer() {
     return () => ro.disconnect();
   }, []);
 
-  const year = new Date().getFullYear();
-
   return (
     <footer className="curtain ground-ink min-h-[14rem]" style={{ height }}>
       <div ref={sheetRef} className="curtain-inner ground-ink">
@@ -37,15 +33,6 @@ export function Footer() {
           <div>
             <p className="m-0 max-w-none font-display text-[clamp(1.75rem,3vw,2.5rem)] font-semibold leading-[1] tracking-[-0.03em]">
               {profile.name}
-            </p>
-            <p className="m-0 mt-4 flex max-w-none flex-wrap items-baseline gap-x-3 gap-y-1 text-[0.9375rem] text-fg-muted">
-              <span>{t(ui.footer.built)}</span>
-              <span aria-hidden>·</span>
-              <span suppressHydrationWarning className="tabular-nums">
-                {year}
-              </span>
-              <span aria-hidden>·</span>
-              <span>{t(ui.footer.rights)}</span>
             </p>
           </div>
 

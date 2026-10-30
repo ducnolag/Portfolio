@@ -17,7 +17,7 @@ export function Contact() {
   const [copied, setCopied] = useState(false);
   const timer = useRef(0);
   const sectionRef = useRef<HTMLElement>(null);
-  const headRef = useRef<HTMLDivElement>(null);
+  const headRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
@@ -83,8 +83,9 @@ export function Contact() {
       aria-labelledby="contact-heading"
     >
       <div className="container-x grid gap-12 lg:grid-cols-12 lg:gap-10">
-        <div ref={headRef} className="lg:col-span-8">
+        <div className="lg:col-span-8">
           <h2
+            ref={headRef}
             id="contact-heading"
             className="m-0 max-w-[12ch] text-[clamp(2.75rem,7vw,6rem)] font-bold leading-[0.95] tracking-[-0.035em]"
           >
@@ -94,7 +95,7 @@ export function Contact() {
               </Reveal>
             </span>
           </h2>
-          <Reveal as="p" variant="rise" delay={80} className="mt-7 max-w-[44ch] text-[clamp(1.125rem,1.5vw,1.375rem)] leading-[1.45] text-fg">
+          <Reveal as="p" variant="rise" delay={80} className="mt-7 max-w-[34ch] text-[clamp(1.125rem,1.5vw,1.375rem)] leading-[1.45] text-fg">
             {t(ui.contact.body)}
           </Reveal>
 
@@ -133,7 +134,7 @@ export function Contact() {
         </div>
 
         <Reveal variant="fade" delay={240} className="self-end lg:col-span-4 lg:col-start-9">
-          <p className="m-0 max-w-none break-all text-[clamp(1.125rem,1.5vw,1.375rem)] font-medium">
+          <p className="m-0 max-w-none [overflow-wrap:anywhere] text-[clamp(1.125rem,1.5vw,1.375rem)] font-medium">
             <a href={mailto} className="no-underline hover:text-orchid">
               {profile.email}
             </a>

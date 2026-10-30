@@ -411,7 +411,7 @@ html[data-motion="full"] .marquee[data-paused] .marquee-track { animation-play-s
 .pcard:hover .pcard-edge { opacity: 1; }
 .tag {
   display: inline-flex; align-items: center; height: 1.75rem; padding-inline: 0.7rem; border-radius: 999px;
-  border: 1px solid var(--line-strong); font-size: 0.8125rem; font-weight: 500; color: var(--fg-muted); white-space: nowrap;
+  border: 1px solid var(--line-strong); font-size: 0.875rem; font-weight: 500; color: var(--fg-muted); white-space: nowrap;
 }
 
 /* ─── Lag's dialogue: bubbles, thread, cards ─────────────────── */
@@ -466,14 +466,15 @@ html.js[data-motion="full"] .bubble-text[data-typing="pending"] { opacity: 0.45;
 .chat-fab:hover .chat-fab-label, .chat-fab:focus-visible .chat-fab-label { max-width: 8rem; padding-right: 0.5rem; }
 .chat-panel {
   position: fixed; right: max(1rem, env(safe-area-inset-right)); bottom: calc(max(1rem, env(safe-area-inset-bottom)) + 68px); z-index: 70;
-  display: flex; flex-direction: column; width: 360px; height: min(520px, calc(100svh - 7rem));
+  display: flex; flex-direction: column; width: 360px; height: min(520px, calc(100dvh - 7rem));
   background: var(--ink-2); border: 1px solid var(--line-strong); border-radius: 20px; overflow: clip;
   box-shadow: 0 30px 80px -30px color-mix(in oklab, var(--neon) 55%, transparent);
 }
 html.js[data-motion="full"] .chat-panel { animation: chat-in 320ms var(--ease-out) both; }
 @keyframes chat-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } }
 @media (max-width: 639px) {
-  .chat-panel { left: 0; right: 0; bottom: 0; width: auto; height: min(78svh, 560px); border-radius: 20px 20px 0 0; border-bottom: 0; }
+  .chat-panel { left: 0; right: 0; bottom: 0; width: auto; height: min(78dvh, calc(100dvh - 5rem), 560px); border-radius: 20px 20px 0 0; border-bottom: 0; }
+  .chat-form { padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)); }
   .chat-fab[aria-expanded="true"] { display: none; }
 }
 .chat-head { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0.75rem 0.75rem 1rem; border-bottom: 1px solid var(--line); background: var(--ink-3); }
@@ -482,8 +483,8 @@ html.js[data-motion="full"] .chat-panel { animation: chat-in 320ms var(--ease-ou
 .chat-msg-lag { align-self: flex-start; background: var(--ink-3); border-bottom-left-radius: 4px; }
 .chat-msg-you { align-self: flex-end; background: var(--violet); color: var(--accent-ink); border-bottom-right-radius: 4px; }
 .chip {
-  display: inline-flex; align-items: center; height: 1.9rem; padding-inline: 0.75rem; border-radius: 999px;
-  border: 1px solid var(--line-strong); font-size: 0.8125rem; font-weight: 500; color: var(--fg); background: transparent;
+  display: inline-flex; align-items: center; height: 2.25rem; padding-inline: 0.8rem; border-radius: 999px;
+  border: 1px solid var(--line-strong); font-size: 0.875rem; font-weight: 500; color: var(--fg); background: transparent;
   transition: border-color 200ms ease, color 200ms ease, transform 140ms var(--ease-out);
 }
 .chip:hover { border-color: var(--orchid); color: var(--orchid); }
@@ -496,6 +497,16 @@ html.js[data-motion="full"] .chat-panel { animation: chat-in 320ms var(--ease-ou
 .chat-input::placeholder { color: var(--fg-muted); }
 .chat-input:focus-visible { outline: 2px solid var(--orchid); outline-offset: 1px; border-color: transparent; }
 .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+/* Touch: every control at least 44px tall */
+@media (pointer: coarse) {
+  .motion-toggle, .chip { height: 2.75rem; }
+  .lang-toggle { height: 2.75rem; }
+}
+/* Short landscape phones: the hero corners would collide with the copy */
+@media (max-height: 520px) and (orientation: landscape) {
+  .hero-corner { display: none; }
+}
 
 /* ─── Curtain footer: fixed sheet revealed through a clipped box ─ */
 .curtain { position: relative; clip-path: inset(0); }

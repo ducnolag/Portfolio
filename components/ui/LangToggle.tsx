@@ -16,7 +16,7 @@ export function LangToggle({ className = "" }: { className?: string }) {
   return (
     <div
       role="group"
-      className={`lang-toggle relative inline-grid h-9 grid-cols-2 rounded-full border border-[var(--line-strong)] p-[3px] ${className}`}
+      className={`lang-toggle relative inline-grid h-9 grid-cols-2 rounded-full border border-[var(--line-strong)] p-[3px] pointer-coarse:h-11 ${className}`}
       data-lang={lang}
     >
       <span aria-hidden className="lang-toggle-thumb" />

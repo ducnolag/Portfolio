@@ -724,12 +724,14 @@ type Live = {
   fade: number;
   seenHop: number;
   guideFace: GuideFace | null;
-  projects: Element | null;
+  about: Element | null;
   nextQuery: number;
 };
 const GUIDE_OMEGA = Math.PI * 2 * 0.9;
 /** Gap between the head's near edge and the anchor it sits beside, in px. */
 const STANDOFF = 40;
+/** Bottom inset that keeps Lag off the fixed chat launcher in the lower-right corner. */
+const CHAT_INSET = 96;
 
 export function Companion() {
   const reduced = useReducedMotion();
@@ -765,7 +767,7 @@ export function Companion() {
     fade: 0,
     seenHop: 0,
     guideFace: null,
-    projects: null,
+    about: null,
     nextQuery: 0,
   });
 
@@ -922,14 +924,17 @@ export function Companion() {
     const p = reduced ? 0.5 : heldProgress(section);
     const owner = guideState.owner;
     const anchor = guideState.anchor;
-    if (now > s.nextQuery && !s.projects) {
+    if (now > s.nextQuery && !s.about) {
       s.nextQuery = now + 0.5;
-      s.projects = document.getElementById("projects");
+      s.about = document.getElementById("about");
     }
-    const afterProjects = !!s.projects && s.projects.isConnected && s.projects.getBoundingClientRect().top < vh * 0.6;
-    const scene = sceneNear && (owner === null || p < 0.92) && p < 0.92;
-    const docked = !scene && !portrait && owner !== null && anchor !== null;
-    const gap = !scene && !docked && !portrait && (sceneLingers || afterProjects);
+    const afterAbout = !!s.about && s.about.isConnected && s.about.getBoundingClientRect().top < vh * 0.6;
+    /* docked wins whenever a section owns Lag (landscape); the scene plays while nobody does */
+    /* the 3D guide needs a wide landscape viewport; narrower screens get Agent B's 2D avatar */
+    const narrow = portrait || vw < 1024;
+    const docked = !narrow && owner !== null && anchor !== null;
+    const scene = !docked && sceneNear && p < 0.92;
+    const gap = !scene && !docked && !narrow && (sceneLingers || afterAbout);
     const visible = scene || docked || gap;
 
     /* fade (300 ms) by scale; fully hidden stops rendering */
@@ -953,6 +958,9 @@ export function Companion() {
       else if (anchor.side === "right") fitPx = vw - 16 - (anchor.x + anchor.width) - STANDOFF;
       else fitPx = (anchor.y - 72 - STANDOFF) / 1.3; // head + antenna ≈ 1.3 × its width
       guideScale = Math.min(guideScale, Math.max(96, fitPx) * wpp);
+      /* in the particle scene it keeps small and out of the picture; in Contact it must not reach the right column */
+      if (owner === "portrait") guideScale = Math.min(guideScale, 160 * wpp);
+      if (owner === "contact") guideScale = Math.min(guideScale, 150 * wpp);
     }
     const wantSize = scene ? sceneScale : guideScale;
     s.size = s.size === 1 && s.fade < 0.05 ? wantSize : s.size + (wantSize - s.size) * (1 - Math.exp(-dt * 4));
@@ -980,14 +988,21 @@ export function Companion() {
       if (anchor.side === "left") px = anchor.x - STANDOFF - half;
       else if (anchor.side === "right") px = anchor.x + anchor.width + STANDOFF + half;
       else py = anchor.y - STANDOFF - headWidthPx * 0.4; // head bottom STANDOFF above the anchor
+      /* portrait scene: always at the right edge, level with the caption, off the particles */
+      if (owner === "portrait") px = vw - 24 - half;
+      /* contact: the right column starts at ~66 % of the width; sit higher, bottom on the heading's cap line */
+      if (owner === "contact") {
+        px = Math.min(px, 0.62 * vw - half);
+        py -= 30;
+      }
       px = clamp(px, 16 + half, vw - 16 - half);
-      py = clamp(py, 72 + headWidthPx * 0.9, vh - headWidthPx * 0.55);
+      py = clamp(py, 72 + headWidthPx * 0.9, vh - CHAT_INSET - headWidthPx * 0.55); // clear of the chat launcher
       const w = viewportToWorld(px, py, vw, vh);
       tx = w.x;
       ty = w.y;
     } else {
       /* a gap between owners: wait in the lower-right corner, off the text */
-      const w = viewportToWorld(vw - headWidthPx * 0.9, vh - headWidthPx * 0.95, vw, vh);
+      const w = viewportToWorld(vw - headWidthPx * 0.9, vh - CHAT_INSET - headWidthPx * 0.7, vw, vh);
       tx = w.x;
       ty = w.y;
     }

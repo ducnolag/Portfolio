@@ -123,7 +123,7 @@ export function Hero() {
 
       {/* Hint, bottom-left: the badge is a real object */}
       <p
-        className="hero-load pointer-events-none absolute bottom-7 left-[var(--gutter)] m-0 flex max-w-[calc(100%-var(--gutter)*2-3.5rem)] items-center gap-2 text-[0.9375rem] text-fg-muted sm:max-w-none"
+        className="hero-load hero-corner pointer-events-none absolute bottom-7 left-[var(--gutter)] m-0 flex max-w-[calc(100%-var(--gutter)*2-3.5rem)] items-center gap-2 text-[0.9375rem] text-fg-muted sm:max-w-none"
         style={{ "--d": "980ms" } as CSSProperties}
       >
         <Icon name="hand" size={20} className="shrink-0 text-orchid" />
@@ -132,7 +132,7 @@ export function Hero() {
 
       {/* Scroll cue, bottom-right: the word only from 640px up; below that, the neon drop alone */}
       <p
-        className="hero-load pointer-events-none absolute bottom-7 right-[var(--gutter)] m-0 flex max-w-none items-center gap-3 text-[0.9375rem] text-fg-muted"
+        className="hero-load hero-corner pointer-events-none absolute bottom-7 right-[var(--gutter)] m-0 flex max-w-none items-center gap-3 text-[0.9375rem] text-fg-muted"
         style={{ "--d": "1040ms" } as CSSProperties}
       >
         <span className="hidden sm:inline">{t(ui.hero.scroll)}</span>

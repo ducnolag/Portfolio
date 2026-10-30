@@ -112,6 +112,36 @@ export type Project = {
 
 export const projects: Project[] = [
   {
+    slug: "noodles",
+    title: "Tiệm Ăn Vặt",
+    tagline: {
+      en: "A playful storefront for a mixed-noodle shop.",
+      vi: "Trang bán hàng vui nhộn cho một tiệm mì trộn.",
+    },
+    description: {
+      en: "Final-term front-end project: product catalogue, cart and checkout flow built with vanilla JavaScript, HTML and CSS. No framework, all hand-rolled.",
+      vi: "Bài tập cuối kỳ front-end: danh mục sản phẩm, giỏ hàng và luồng thanh toán bằng JavaScript, HTML và CSS thuần. Không framework, tự tay dựng toàn bộ.",
+    },
+    highlights: {
+      en: ["Vanilla JS state & cart", "Responsive CSS layout", "Course capstone"],
+      vi: ["State & giỏ hàng JS thuần", "Layout CSS responsive", "Đồ án môn học"],
+    },
+    stack: ["JavaScript", "HTML", "CSS"],
+    category: "web",
+    lagSays: {
+      en: "Đức's first project. The one that started his habit of learning and tinkering.",
+      vi: "Dự án đầu tiên của Đức. Cái đã khởi đầu cho hành trình học hỏi và tìm tòi của cậu ấy.",
+    },
+    repo: "https://github.com/ducnolag/Websitez-Buy_Noodles-FE",
+    demo: "https://tiem-an-vat-ngon-nhat-the-gioi.netlify.app/",
+    demoKind: "live",
+    cover: "/images/projects/noodles.jpg",
+    year: 2025,
+    featured: false,
+    accent: "orchid",
+    visibility: "public",
+  },
+  {
     slug: "toolify",
     title: "Toolify for Everyone",
     tagline: {
@@ -129,8 +159,8 @@ export const projects: Project[] = [
     stack: ["Next.js", "TypeScript", "Python", "Gemini API", "Docker"],
     category: "ai",
     lagSays: {
-      en: "Đức's biggest build so far. One roof, many small AI tools, and it runs even without an API key.",
-      vi: "Dự án lớn nhất của Đức tới giờ. Một mái nhà, nhiều tool AI nhỏ, không có API key vẫn chạy.",
+      en: "Đức's biggest build so far. One roof, many small AI tools.",
+      vi: "Dự án lớn nhất của Đức tới giờ. Một mái nhà, nhiều tool AI nhỏ.",
     },
     repo: "https://github.com/ducnolag/ToolifyForEveryone",
     year: 2026,
@@ -156,8 +186,8 @@ export const projects: Project[] = [
     stack: ["NestJS", "React", "PostgreSQL", "Docker", "NGINX"],
     category: "web",
     lagSays: {
-      en: "He led four people through a hackathon for this one. The UI is live; the back end is still waiting for a server.",
-      vi: "Vụ này Đức dẫn bốn người qua một kỳ hackathon. Giao diện đã lên, backend còn chờ server.",
+      en: "He led four people through a hackathon for this one. (Front end only, for now.)",
+      vi: "Vụ này Đức dẫn bốn người qua một kỳ hackathon. (Hiện chỉ hỗ trợ FE.)",
     },
     repo: "https://github.com/ducnolag/SV5T",
     demo: "https://xet-duyet-sv5t.netlify.app/login",
@@ -270,8 +300,8 @@ export const projects: Project[] = [
     stack: ["TypeScript", "Vercel"],
     category: "web",
     lagSays: {
-      en: "Four stages, monsters that ask questions, a boss you beat with code. Thirty-five minutes on the clock.",
-      vi: "Bốn ải, quái hỏi câu hỏi, boss hạ bằng code. Đồng hồ ba mươi lăm phút.",
+      en: "Bored of plain multiple-choice test forms? He made a game that's fun and still teaches.",
+      vi: "Quá nhàm chán với những form trắc nghiệm bài test thông thường, hãy làm ngay một game giải trí mà vẫn có thể học tập.",
     },
     demo: "https://bit-minigametest.vercel.app/",
     demoKind: "live",
@@ -308,36 +338,6 @@ export const projects: Project[] = [
     featured: false,
     accent: "magenta",
     visibility: "private",
-  },
-  {
-    slug: "noodles",
-    title: "Tiệm Ăn Vặt",
-    tagline: {
-      en: "A playful storefront for a mixed-noodle shop.",
-      vi: "Trang bán hàng vui nhộn cho một tiệm mì trộn.",
-    },
-    description: {
-      en: "Final-term front-end project: product catalogue, cart and checkout flow built with vanilla JavaScript, HTML and CSS. No framework, all hand-rolled.",
-      vi: "Bài tập cuối kỳ front-end: danh mục sản phẩm, giỏ hàng và luồng thanh toán bằng JavaScript, HTML và CSS thuần. Không framework, tự tay dựng toàn bộ.",
-    },
-    highlights: {
-      en: ["Vanilla JS state & cart", "Responsive CSS layout", "Course capstone"],
-      vi: ["State & giỏ hàng JS thuần", "Layout CSS responsive", "Đồ án môn học"],
-    },
-    stack: ["JavaScript", "HTML", "CSS"],
-    category: "web",
-    lagSays: {
-      en: "The first one. A noodle-shop storefront in plain JavaScript, cart and all.",
-      vi: "Cái đầu tiên. Trang bán mì bằng JavaScript thuần, có cả giỏ hàng.",
-    },
-    repo: "https://github.com/ducnolag/Websitez-Buy_Noodles-FE",
-    demo: "https://tiem-an-vat-ngon-nhat-the-gioi.netlify.app/",
-    demoKind: "live",
-    cover: "/images/projects/noodles.jpg",
-    year: 2025,
-    featured: false,
-    accent: "orchid",
-    visibility: "public",
   },
 ];
 
@@ -467,12 +467,12 @@ export const ui = {
       lines: {
         en: [
           "Meet Lag, my build companion. Don't let the name fool you.",
-          "It thinks when I think, and ships when I ship.",
+          "A bit chatty, but it knows everything about me. Go on, ask it.",
           "Scroll on. It'll show you around.",
         ],
         vi: [
           "Gặp Lag, bạn đồng hành của mình. Đừng để cái tên đánh lừa.",
-          "Mình nghĩ, nó nghĩ. Mình ship, nó ship.",
+          "Hơi nhiều chuyện, nhưng chuyện gì về mình nó cũng biết. Hỏi thử xem.",
           "Cuộn tiếp. Nó sẽ dẫn bạn đi một vòng.",
         ],
       } as L<string[]>,
@@ -482,6 +482,10 @@ export const ui = {
   },
   about: {
     heading: { en: "About me", vi: "Về mình" },
+    lagSays: {
+      en: "This is Đức. I'll let him introduce himself.",
+      vi: "Đây là Đức. Để cậu ấy tự giới thiệu nhé.",
+    },
     statement: {
       en: "Good products don't just solve problems. They leave a memorable experience.",
       vi: "Sản phẩm tốt không chỉ giải quyết vấn đề. Nó để lại một trải nghiệm đáng nhớ.",

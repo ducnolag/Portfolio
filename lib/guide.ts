@@ -29,7 +29,7 @@ export type GuideAnchor = {
 
 export type GuideState = {
   /** Section currently owning Lag: null = not docked (companion scene or none). */
-  owner: null | "projects" | "skills" | "contact";
+  owner: null | "about" | "portrait" | "projects" | "skills" | "contact";
   anchor: GuideAnchor | null;
   face: GuideFace;
   /** Index of the active dialogue entry (projects), -1 when none. */

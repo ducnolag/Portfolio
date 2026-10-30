@@ -2,12 +2,14 @@
 
 import Image from "next/image";
 import { motion, useScroll, useTransform, type MotionValue } from "motion/react";
-import { useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { profile, ui } from "@/lib/content";
 import { useLang } from "@/lib/i18n";
 import { useReducedMotion } from "@/lib/hooks";
 import { Icon } from "@/components/ui/Icon";
 import { Reveal } from "@/components/ui/Reveal";
+import { useTypewriter } from "@/components/ui/useTypewriter";
+import { guideState, setGuideAnchor } from "@/lib/guide";
 
 /** One word of the statement: 45% → 100% cream as its line passes the middle of the screen. */
 function Word({ progress, i, n, children }: { progress: MotionValue<number>; i: number; n: number; children: string }) {
@@ -50,6 +52,41 @@ function Statement({ text, reduced }: { text: string; reduced: boolean }) {
   );
 }
 
+/** Lag's line for this chapter: types in once the section is on screen; Lag docks to its right. */
+function LagBubble({ text, reduced, onTalking }: { text: string; reduced: boolean; onTalking: (talking: boolean) => void }) {
+  const [start, setStart] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const { shown, phase } = useTypewriter(text, start ? "type" : "pending", 18, reduced, () => onTalking(false));
+  useEffect(() => {
+    if (phase === "typing") onTalking(true);
+  }, [phase, onTalking]);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          setStart(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "0px 0px -15% 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <Reveal variant="pop" className="lg:ml-auto">
+      <div ref={ref} data-typing={phase} className="bubble bubble-right bubble-text max-w-[30ch]">
+        <p className="m-0 max-w-none text-[1.0625rem] leading-[1.45] text-fg">
+          {shown}
+          {phase === "typing" && <span className="caret" aria-hidden />}
+        </p>
+      </div>
+    </Reveal>
+  );
+}
+
 /** Event photographs, in gallery order (presenting, then hackathon). */
 const EVENTS = [profile.photos.presenting, profile.photos.hackathon] as const;
 
@@ -66,6 +103,51 @@ export function About() {
   const intro = t(profile.intro);
   const facts = t(ui.about.facts);
 
+  /* Lag docks to the right of its bubble while the chapter is on screen */
+  const lagRef = useRef<HTMLDivElement>(null);
+  const onTalking = useCallback((talking: boolean) => {
+    if (guideState.owner !== "about") return;
+    guideState.talking = talking;
+    guideState.face = talking ? "speaking" : "idle";
+  }, []);
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    let on = false;
+    let raf = 0;
+    const place = () => {
+      raf = 0;
+      if (on) setGuideAnchor(lagRef.current?.querySelector(".bubble") ?? lagRef.current, "right");
+    };
+    const schedule = () => {
+      if (!raf) raf = requestAnimationFrame(place);
+    };
+    const io = new IntersectionObserver(
+      ([e]) => {
+        on = e.isIntersecting;
+        if (on) {
+          guideState.owner = "about";
+          guideState.face = "speaking";
+          schedule();
+        } else if (guideState.owner === "about") {
+          guideState.owner = null;
+          guideState.talking = false;
+        }
+      },
+      { rootMargin: "-15% 0px -15% 0px" },
+    );
+    io.observe(section);
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      if (raf) cancelAnimationFrame(raf);
+      if (guideState.owner === "about") guideState.owner = null;
+    };
+  }, []);
+
   return (
     <section
       id="about"
@@ -74,6 +156,11 @@ export function About() {
       aria-labelledby="about-heading"
     >
       <div className="container-x">
+        {/* Lag's line, top-right above the heading row; the 3D guide docks to its right */}
+        <div ref={lagRef} className="mb-8 flex lg:mb-12 lg:justify-end lg:pr-[18%]">
+          <LagBubble text={t(ui.about.lagSays)} reduced={reduced} onTalking={onTalking} />
+        </div>
+
         {/* Row 1: heading on the left third, statement on the right two-thirds */}
         <div className="grid gap-8 lg:grid-cols-12 lg:gap-10">
           <h2
